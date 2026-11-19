@@ -90,8 +90,8 @@ def test_profile_firmware_bounds_are_enforced_for_writes():
 def test_an_unshipped_remote_is_still_named_on_import():
     """Dropping the profiles must not make a foreign config unidentifiable rubbish:
     the skin table still says which remote it belongs to."""
-    header = b"<INTENDEDVERSION><PROTOCOL>8</PROTOCOL><SKIN>15</SKIN></INTENDEDVERSION>"
-    with pytest.raises(remotes.UnknownRemote, match="Harmony 880"):
+    header = b"<INTENDEDVERSION><PROTOCOL>8</PROTOCOL><SKIN>17</SKIN></INTENDEDVERSION>"
+    with pytest.raises(remotes.UnknownRemote, match="Harmony 885"):
         remotes.identify(header)
 
 

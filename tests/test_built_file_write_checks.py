@@ -38,7 +38,11 @@ def _build(tmp_path, remote, skin):
 @pytest.mark.parametrize("remote, skin", _buildable())
 def test_a_built_file_passes_the_checks_a_write_makes(tmp_path, remote, skin):
     profile = remotes.get(remote)
-    path = Path(_build(tmp_path, remote, skin))
+    try:
+        path = Path(_build(tmp_path, remote, skin))
+    except NotImplementedError as exc:
+        # a remote that can only relabel an imported configuration has its own test
+        pytest.skip(f"{remote} does not build from a project alone: {exc}")
     header = ezhex.read(path.read_bytes()).header
     assert b">None<" not in header
     # the remote it is for, as it reports itself: any board where the profile names none

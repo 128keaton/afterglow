@@ -49,6 +49,15 @@ def _words(text) -> set[str]:
     return {word for word in re.split(r"[^0-9a-z]+", str(text or "").casefold()) if word}
 
 
+_GENERIC = re.compile(r"^(cmd|command|button|key|unknown)[ _-]?[0-9a-f]*$", re.I)
+
+
+def _clean(name: str) -> bool:
+    """A codeset name that is a real command, not Cmd 12 / Command 1F."""
+    text = str(name or "").strip()
+    return bool(text) and not text[:1].isdigit() and _GENERIC.match(text) is None
+
+
 def _named(device: dict, user: dict) -> int:
     """How much a model's name agrees with the device's: its manufacturer named counts
     most, then its model's words, then its type."""
@@ -92,10 +101,12 @@ def suggest(device: dict, archive, *, limit: int = 3) -> list[dict]:
             if key:
                 theirs.setdefault(key, command.get("Name"))
         names = {name: theirs[key] for name, key in keys.items() if key in theirs}
+        clean = sum(1 for new in names.values() if _clean(new))
         users.sort(key=lambda user: -_named(device, user))
-        out.append({"codeset": codeset, "matched": len(names), "keyed": len(keys),
-                    "named": named, "models": users, "names": names})
-    out.sort(key=lambda item: (-item["matched"], -item["named"], item["codeset"]))
+        out.append({"codeset": codeset, "matched": len(names), "clean": clean,
+                    "keyed": len(keys), "named": named, "models": users, "names": names})
+    out.sort(key=lambda item: (-item.get("clean", 0), -item["matched"],
+                               -item["named"], item["codeset"]))
     return out[:limit]
 
 

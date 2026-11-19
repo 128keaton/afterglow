@@ -10,6 +10,7 @@ Reference documentation for supported remote architectures and configuration for
 | [harmony_one/](harmony_one/README.md) | Harmony One (`harmony-one`) | arch-12 `GSPM` indexed image and native integrity |
 | [harmony_650_700/](harmony_650_700/gspm.md) | Harmony 650 and 700 (`harmony-650`, `harmony-700`) | arch-14 `GSPM`: where it differs from the One's |
 | [harmony_800/](harmony_800/README.md) | Harmony 800 (`harmony-800`) | `GSGD` image read from the 800's firmware |
+| [harmony_880/](harmony_880/tptp.md) | Harmony 880 (`harmony-880`) | arch-8 `TPTP` image, the remote's start check, and its flash images |
 
 ### Harmony 900 (`harmony_pk`) Format Documents
 
@@ -47,3 +48,9 @@ Reference documentation for supported remote architectures and configuration for
 - [lists-and-instructions.md](harmony_800/lists-and-instructions.md) — Lists and their tags, the events the firmware posts, and the instructions it runs
 - [hardware.md](harmony_800/hardware.md) — The lights, the keys and the battery levels
 - [drawing.md](harmony_800/drawing.md) — Screens, the drawing VM, and touch
+
+### Harmony 880 (`harmony-880`) Format Documents
+
+- [tptp.md](harmony_880/tptp.md) — The arch-8 `TPTP` image: layout, checksum, what the remote's start check refuses
+- [firmware.md](harmony_880/firmware.md) — The 64 KiB application and bootloader, and which of them are safe to offer for writing
+- [fonts.md](harmony_880/fonts.md) — The font table, glyphs, screen programs, and how an image's own glyph numbering is read and its text changed

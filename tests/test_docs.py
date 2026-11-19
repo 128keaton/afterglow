@@ -14,6 +14,9 @@ PACKAGE = ROOT / "src" / "afterglow"
 EXPECTED = (
     "README.md",
     "harmony_pk/README.md",
+    "harmony_880/tptp.md",
+    "harmony_880/firmware.md",
+    "harmony_880/fonts.md",
     "harmony_pk/ezhex.md",
     "harmony_pk/configuration.md",
     "harmony_pk/irproto.md",

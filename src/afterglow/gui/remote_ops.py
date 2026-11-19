@@ -116,6 +116,22 @@ class RemoteWorker(QThread):
         self.done.emit(True, f"Connected to {identity['model']}"
                              f"{' in Safe Mode' if identity.get('safe_mode') else ''}.")
 
+    def _reset(self):
+        with self._remote() as remote:
+            # identify first, as every other operation does: libconcord's reset needs the
+            # remote's details, and restart() knows that a reset closes the link itself
+            remote.identity(self._on_progress)
+            seen_again = remote.restart(self._on_progress)
+        self.log.emit("Remote reset." if seen_again else
+                      "Remote reset; it was not seen coming back, which is usual on Linux.")
+        self.done.emit(True, "Reset sent.")
+
+    def _setclock(self):
+        with self._remote() as remote:
+            remote.set_clock(self._on_progress)
+        self.log.emit("Clock set from this computer.")
+        self.done.emit(True, "Clock set.")
+
     def _read(self):
         target = Path(self.kwargs["path"])
         with self._remote() as remote:
@@ -170,6 +186,11 @@ class RemoteWorker(QThread):
             self._welcome(remote, identity, backup)
             self.log.emit(f"Writing {path.name} to {identity['model']}...")
             remote.write_config(path, self._on_progress, **accept)
+            try:
+                remote.set_clock(self._on_progress)
+                self.log.emit("Clock set from this computer.")
+            except Exception as exc:
+                self.log.emit(f"Clock was not set: {exc}")
             # The write succeeded or write_config would have raised. Only the restart
             # is in question, and on Linux the USB link is routinely torn down and
             # re-enumerated faster than libconcord can follow. Say so plainly rather

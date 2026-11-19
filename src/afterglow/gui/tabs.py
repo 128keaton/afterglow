@@ -127,6 +127,45 @@ class CardList(QListWidget):
         return self.itemWidget(self.item(row))
 
 
+
+def _looks_rc6(spec: dict) -> bool:
+    """RC6-MCE leader is a ~2632 us mark. Pulse-distance codes start near 9000 or 3350."""
+    for signal in (spec.get("signals") or {}).values():
+        pulses = signal.get("pulses_us") or []
+        if pulses and 2400 <= abs(pulses[0]) <= 2900:
+            return True
+    return False
+
+
+def _rc6_mce_choices(background, parent):
+    """Xbox 360 / Media Center models, for a device whose codes are RC6 and so
+    have no fingerprint in the code index."""
+    from .. import harmony_archive, paths
+    from ..corpus_provider import logitech_archive_url
+
+    def look_up():
+        archive = harmony_archive.ApiArchive(
+            logitech_archive_url(), paths.cache_dir() / "sources" / "harmony-ir-archive")
+        makers = archive.read_json("index.json")
+        ms = next((m for m in makers if "microsoft" in m.get("n", "").casefold()), None)
+        if ms is None:
+            return []
+        models = archive.read_json(f"devices/{ms['s']}/index.json")
+        want = ("xbox", "media center", "mce", "360")
+        return [m for m in models
+                if any(w in (m.get("m") or "").casefold() for w in want)]
+
+    try:
+        models = background.call(parent, "Looking up Xbox / Media Center...", look_up)
+    except Exception:
+        return []
+    return [(
+        f"Microsoft {m.get('m')} - RC6-MCE (no code-index key)",
+        None,
+        {"manufacturer": "Microsoft", "model": m.get("m")},
+    ) for m in models[:12]]
+
+
 class DevicesTab(QWidget):
     changed = pyqtSignal()
 
@@ -221,9 +260,12 @@ class DevicesTab(QWidget):
         for suggestion in found:
             for model in suggestion["models"][:5]:
                 choices.append((
-                    f"{model.get('manufacturer')} {model.get('model')} - sends "
-                    f"{suggestion['matched']} of {suggestion['keyed']} of its commands",
+                    f"{model.get('manufacturer')} {model.get('model')} - "
+                    f"{suggestion.get('clean', suggestion['matched'])} clean, "
+                    f"{suggestion['matched']} of {suggestion['keyed']} matched",
                     suggestion, model))
+        if not choices and _looks_rc6(spec):
+            choices = _rc6_mce_choices(background, self)
         if not choices:
             QMessageBox.information(
                 self, "Find model",
@@ -235,6 +277,12 @@ class DevicesTab(QWidget):
         if not chosen:
             return
         _text, suggestion, model = next(item for item in choices if item[0] == picked)
+        if suggestion is None:
+            spec["mfr"] = model.get("manufacturer") or ""
+            spec["model"] = model.get("model") or ""
+            self.refresh()
+            self.changed.emit()
+            return
         renames = device_match.apply(spec, suggestion, model,
                                      self.project.get("activities") or [])
         if renames:
@@ -759,10 +807,15 @@ class UpdateTab(QWidget):
         self.flash_btn = QPushButton("Flash to Remote")
         self.read_btn = QPushButton("Read from Remote")
         self.check_btn = QPushButton("Check Connection")
+        self.reset_btn = QPushButton("Reset Remote")
+        self.clock_btn = QPushButton("Set Clock")
         self.flash_btn.clicked.connect(self.flash)
         self.read_btn.clicked.connect(self.read_from_remote)
         self.check_btn.clicked.connect(self.check_connection)
-        for button in (self.flash_btn, self.read_btn, self.check_btn):
+        self.reset_btn.clicked.connect(self.reset_remote)
+        self.clock_btn.clicked.connect(self.set_clock)
+        for button in (self.flash_btn, self.read_btn, self.check_btn,
+                       self.reset_btn, self.clock_btn):
             btn_row.addWidget(button)
         btn_row.addStretch()
         layout.addLayout(btn_row)
@@ -771,7 +824,8 @@ class UpdateTab(QWidget):
         # rather than failing at the moment the user presses a button.
         from .. import concord
         if not concord.available():
-            for button in (self.flash_btn, self.read_btn, self.check_btn):
+            for button in (self.flash_btn, self.read_btn, self.check_btn,
+                           self.reset_btn, self.clock_btn):
                 button.setEnabled(False)
                 button.setToolTip("libconcord is not installed - see the README")
             note = QLabel("libconcord was not found, so the remote cannot be reached. "
@@ -1015,6 +1069,16 @@ class UpdateTab(QWidget):
         """Identify the attached remote. Reads nothing and changes nothing."""
         self.log_box.clear()
         self._run("identify").start()
+
+    def reset_remote(self):
+        """Restart the remote, the same call concordance makes after a write."""
+        self.log_box.clear()
+        self._run("reset").start()
+
+    def set_clock(self):
+        """Set the remote's clock from this computer."""
+        self.log_box.clear()
+        self._run("setclock").start()
 
     def read_from_remote(self):
         """Save the configuration currently on the remote. This is the way back."""

@@ -614,6 +614,7 @@ class Remote:
              [ctypes.POINTER(ctypes.c_uint32),
               ctypes.POINTER(ctypes.POINTER(ctypes.c_uint32)),
               ctypes.POINTER(ctypes.c_uint32), LC_CALLBACK, ctypes.c_void_p]),
+            ("set_time", ctypes.c_int, [LC_CALLBACK, ctypes.c_void_p]),
             ("delete_ir_signal", None, [ctypes.POINTER(ctypes.c_uint32)]),
             ("lc_get_trace", ctypes.c_char_p, []),
             ("lc_clear_trace", None, []),
@@ -800,6 +801,22 @@ class Remote:
             self.lib.delete_blob(blob)
 
     # writing
+    def set_clock(self, on_progress=None, when: int | None = None) -> None:
+        """Set the remote's clock from the host, the same call as ``concordance -K``.
+
+        Identify first: ``set_time`` uses the remote info that call fills in. It is always
+        called with a callback and its argument, which is its signature in libconcord.h
+        (``int set_time(lc_callback cb, void *cb_arg)``). An older build that takes none
+        ignores the two; the other way round - calling the two-argument one with none, as
+        an earlier version of this method tried first - hands it whatever the registers
+        held as a function to call.
+        """
+        if not hasattr(self.lib, "set_time"):
+            raise RemoteError("This libconcord has no set_time; the clock was not set.")
+        self.identity(on_progress)
+        err = self.lib.set_time(self._callback(on_progress), None)
+        self._check(err, "setting the clock")
+
     def write_config(self, path, on_progress=None, reset=True,
                      accept_unconfirmed=False, accept_unknown_skin=False,
                      accept_mismatched=False) -> None:

@@ -6,6 +6,27 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **The Harmony 880, experimental.** Import reads an 880's devices and their infrared
+  commands, with the community's decompiler now bundled, and keeps the image with the
+  project. A build renames the devices whose names changed in that image, closes it again
+  and checks it the way the remote's own start check does - the cookie, the marker, the
+  closing `DKDK` and the checksum - so an image that would make the remote show "Go to
+  Website to update settings" or "Configuration Corrupted" is refused with the reason.
+  `tools/harmony_880_check.py` checks a configuration, a firmware package or a 64 KiB
+  flash image the same way, and refuses a bootloader that would leave the remote with no
+  program to run.
+
+- **An 880's text is read from the image, not from a table.** Each configuration numbers
+  its glyphs in its own order, so the letter codes one image used were wrong in the next.
+  The font table, the glyphs and the screen programs are now read, and a code is read by
+  the shape its glyph draws; renaming a device writes the new name with that image's own
+  codes, in the font each place is drawn in; a label in a right-hand cell keeps ending at the
+  right edge, and a name too long for its room is drawn in full on every copy of the page. What
+  cannot be done is left alone, whole, and said. The old rewrite of the Devices page, which
+  lost its pictures, is gone.
+
 ### Fixed
 
 - **An activity's Physical buttons say what a key left at Default sends**, such as
@@ -15,6 +36,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - **Harmony One and 800: Activities on the Activities menu with nothing running opens
   its first page**, as Logitech's configurations do; it did nothing. With an activity
   running it goes back to that activity, as before.
+- **An 880 build no longer starts from the newest backup.** It took the newest file in the
+  Dumps folder as its base, so a damaged image read back from the remote became the input
+  of every later build; it also sealed an image that had lost its end marker without
+  saying so. It builds from the image the project was imported from.
+- **Reset Remote crashed.** It reset before identifying the remote, which libconcord
+  needs. Set Clock called libconcord's `set_time` with no arguments first, where it takes
+  a callback; it is now always called with one.
 
 ## [0.3.0-beta.7.1] - 2026-11-16
 
