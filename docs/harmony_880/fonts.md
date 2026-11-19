@@ -138,8 +138,35 @@ drawn. A string is drawn by one inline instruction and any number of references,
   bytes shared with another string, too short to grow) is **not done in part**: it is left as it is
   and the note says why.
 
+### Names the page wraps
+
+The Devices page never draws a long device name as one string. `Digital Set Top Box` is `Digital
+Set` (y = 29) over `Top Box` (y = 42), two strings 13 pixels apart that no search for the whole
+name will find; a one-line name sits on the lower line, as `TV` does. The whole name is drawn only
+as the title of the device's own page. `labels.cells` reads the page as cells - a string, or two
+strings 13 pixels apart in the same column - and `rename` names a cell by its lines joined with a
+space (or by the bracketed end of the device's name: the page draws `(DVD,` over `CD, Radio)` for
+`Mini System (DVD, CD, Radio)`). Then:
+
+- the new name is wrapped between its words into at most two lines of 58 pixels, the widest
+  label in the sixteen images being 57;
+- two lines go on the cell's two strings, one line on the lower with the upper blanked (spaces);
+- a name that needs two lines in a cell of one is **not drawn**: a second line is a new
+  instruction, and nothing here can add one without moving what follows it. It is left as it is
+  and the note says so;
+- the two lines of a cell are not always in the same font set - `Digital Set` is in set 8 and
+  `Top Box` in set 7 in `Update.EZHex`, the other way round in `H880-Spare-4.EZHex` - and a set
+  holds only the letters its image's pages use (set 8 has no `B` and no `F`). Where two sets draw
+  the same picture for every character they share, a line is drawn from the one that has the
+  letters: the `10 n` that chooses its font, in each copy of the page, is changed to it. That is
+  done only when the `10 n` belongs to that string alone.
+
 Nothing after the old trailer moves, the image is sealed again, and every program of the result
-still reads. Nothing here has been put on a screen.
+still reads. Nothing here has been put on a screen except `TV Wheel` (a renamed single line,
+which drew correctly); the wrapped cells are checked by reading the result back.
+
+The device page's own title is drawn truncated with two dots (`Mini System (DVD, C..`), so the
+title of a long name is not renamed.
 
 An earlier build redrew the first copy of the Devices page from a program of text alone, which lost
 its pictures and left the other copies as they were; it is gone.

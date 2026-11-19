@@ -26,6 +26,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
   right edge, and a name too long for its room is drawn in full on every copy of the page. What
   cannot be done is left alone, whole, and said. The old rewrite of the Devices page, which
   lost its pictures, is gone.
+- **An 880 renames a device the page wraps over two lines.** The Devices page draws
+  "Digital Set Top Box" as `Digital Set` over `Top Box`, so renaming it changed the one place
+  that draws it whole and the page still said the old name. The page's cells are now read as
+  one device each, the new name is wrapped to the cell as the page wraps a long one - or put
+  on the lower line, with the upper blanked, when it fits one - and every copy of the page
+  is redrawn. Letters the upper line's font set lacks are drawn from the set that has them
+  where it draws the same face. A name that needs two lines in a cell that has one is left
+  as it is and said.
 
 ### Fixed
 

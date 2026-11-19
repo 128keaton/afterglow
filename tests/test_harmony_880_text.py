@@ -170,12 +170,12 @@ def test_the_users_own_screens_read_as_the_remote_shows_them():
 
 def test_a_shorter_name_is_padded_and_the_image_keeps_its_length_and_checksum():
     payload = _named("Update.EZHex")
-    changed, notes = labels.rename(payload, {"Digital Set": "Set Box"})
+    changed, notes = labels.rename(payload, {"Choose an Activity": "Choose"})
     assert len(changed) == len(payload) and notes
     tptp.validate(changed)
     reading = labels.read(changed)
-    assert any(reading.text(run).rstrip() == "Set Box" for run in reading.runs)
-    assert not labels.find(reading, "Digital Set")
+    assert any(reading.text(run).rstrip() == "Choose" for run in reading.runs)
+    assert not labels.find(reading, "Choose an Activity")
 
 
 def test_the_title_that_draws_a_name_whole_is_renamed_too():
@@ -332,6 +332,148 @@ def test_a_left_hand_label_stays_where_it_starts():
     assert shown
     assert all(run.x == 3 for run in shown if reading.alignment(run) == "left")
     assert all(reading.alignment(run) in ("left", "right") for run in shown)
+
+
+# -- a name the page wraps over two lines ------------------------------------------------------
+
+
+def _cell_texts(payload: bytes) -> list[str]:
+    reading = labels.read(payload)
+    return sorted(cell.text(reading) for cell in labels.cells(reading))
+
+
+def _drawn_cells(payload: bytes, name: str):
+    """{program: [(y, x, font, text, side)]} for the lines of the cell that reads ``name``,
+    one entry for each copy of the Devices page."""
+    reading = labels.read(payload)
+    # After a rename the copies of a page that were written in place and those that were
+    # pointed at new text read the same but are different strings: all of them are the cell.
+    key = {at for cell in labels.cells(reading) if cell.text(reading) == name
+           for at in cell.key}
+    assert key, f"{name!r} is the text of no cell"
+    pages = {run.program for run in reading.runs if reading.text(run) == "Devices"}
+    drawn: dict[int, list] = {}
+    for run in reading.runs:
+        if run.at in key and run.program in pages:
+            drawn.setdefault(run.program, []).append(
+                (run.y, run.x, run.font, reading.text(run).strip(), reading.alignment(run)))
+    return reading, {program: sorted(lines) for program, lines in drawn.items()}
+
+
+def test_the_page_reads_a_wrapped_name_as_one_device():
+    payload = _named("Update.EZHex")
+    assert _cell_texts(payload) == sorted([
+        "TV", "Digital Set Top Box", "(DVD, CD, Radio)", "(With DVD)"])
+
+
+def test_a_wrapped_name_is_redrawn_wrapped_on_every_copy_of_the_page():
+    """The failure that came off the remote: 'Digital Set Top Box' was renamed in the one
+    place that draws it whole, and the page, which draws ``Digital Set`` over ``Top Box``,
+    still said so."""
+    payload = _named("Update.EZHex")
+    changed, notes = labels.rename(payload, {"Digital Set Top Box": "Satellite Box"})
+    tptp.validate(changed)
+    assert "Digital Set Top Box" not in _cell_texts(changed)
+    _reading, pages = _drawn_cells(changed, "Satellite Box")
+    assert len(pages) == 6
+    for lines in pages.values():
+        assert [text for _y, _x, _font, text, _side in lines] == ["Satellite", "Box"]
+        assert lines[1][0] - lines[0][0] == labels.LINE_STEP
+        assert all(side in ("left", "right") for *_rest, side in lines)
+    assert any("2 line(s)" in note and "'Satellite' over 'Box'" in note for note in notes)
+    _runs, report = screens.text_runs(changed)
+    assert report["unreadable"] == 0 and report["unterminated"] == 0
+
+
+def test_a_right_hand_wrapped_name_still_ends_at_the_right_edge_on_both_lines():
+    payload = _named("Update.EZHex")
+    changed, _notes = labels.rename(payload, {"Digital Set Top Box": "Satellite Box"})
+    reading = labels.read(changed)
+    key = {at for cell in labels.cells(reading) if cell.text(reading) == "Satellite Box"
+           for at in cell.key}
+    right = [run for run in reading.runs if run.at in key and reading.alignment(run) == "right"]
+    assert right
+    assert all(run.x + reading.pixels(run.font, run.codes) == labels.RIGHT_EDGE for run in right)
+
+
+def test_a_name_that_fits_one_line_goes_on_the_lower_line_and_the_upper_is_blanked():
+    payload = _named("Update.EZHex")
+    changed, _notes = labels.rename(payload, {"Digital Set Top Box": "Cable Box"})
+    reading = labels.read(changed)
+    cell = next(c for c in labels.cells(reading) if c.text(reading) == "Cable Box")
+    assert reading.text(cell.lines[0]).strip() == ""
+    assert reading.text(cell.lines[1]).strip() == "Cable Box"
+
+
+def test_a_wrapped_name_borrows_letters_the_upper_lines_font_lacks_from_the_same_face():
+    """The upper line is drawn in font set 8, which has no capital B or F; set 7 draws the
+    same pictures and has them, so the line is drawn from set 7 wherever it is drawn."""
+    payload = _named("Update.EZHex")
+    changed, _notes = labels.rename(payload, {"Digital Set Top Box": "Bedroom Fan Box"})
+    tptp.validate(changed)
+    _reading, pages = _drawn_cells(changed, "Bedroom Fan Box")
+    assert len(pages) == 6
+    for lines in pages.values():
+        assert [text for _y, _x, _font, text, _side in lines] == ["Bedroom", "Fan Box"]
+        assert {font_set for _y, _x, font_set, _text, _side in lines} == {7}
+    _runs, report = screens.text_runs(changed)
+    assert report["unreadable"] == 0 and report["unterminated"] == 0
+
+
+def test_a_bracketed_name_is_found_by_the_bracketed_end_of_the_device_name():
+    """The page draws ``(DVD,`` over ``CD, Radio)`` for the device ``Mini System (DVD, CD,
+    Radio)``; the words before the bracket are not on it."""
+    payload = _named("Update.EZHex")
+    changed, _notes = labels.rename(payload, {"Mini System (DVD, CD, Radio)": "Stereo"})
+    assert "Stereo" in _cell_texts(changed) and "(DVD, CD, Radio)" not in _cell_texts(changed)
+
+
+def test_a_name_that_needs_two_lines_in_a_cell_of_one_is_not_drawn_and_said():
+    """'TV' has one line; the page has nothing there to draw a second with."""
+    payload = _named("Update.EZHex")
+    changed, notes = labels.rename(payload, {"TV": "Living Room TV"})
+    assert _cell_texts(changed) == _cell_texts(payload)
+    assert any("needs two lines" in note and "left as it is" in note for note in notes)
+
+
+def test_a_name_of_three_lines_is_not_done_in_part():
+    payload = _named("Update.EZHex")
+    changed, notes = labels.rename(
+        payload, {"Digital Set Top Box": "Digital Set Top Box And Another"})
+    assert _cell_texts(changed) == _cell_texts(payload)
+    assert any("does not fit" in note for note in notes)
+
+
+@pytest.mark.parametrize("name, new", [
+    ("TV", "Television"), ("TV", "Hi"),
+    ("Digital Set Top Box", "Sat Box"), ("Digital Set Top Box", "Lounge Box Two"),
+    ("(With DVD)", "DVD Player"), ("(DVD, CD, Radio)", "Radio"),
+])
+def test_no_label_of_the_devices_page_is_wider_than_its_cell_after_a_rename(name, new):
+    payload = _named("Update.EZHex")
+    changed, _notes = labels.rename(payload, {name: new})
+    tptp.validate(changed)
+    reading = labels.read(changed)
+    pages = {run.program for run in reading.runs if reading.text(run) == "Devices"}
+    for run in reading.runs:
+        if run.program in pages and labels.FIRST_CELL_Y <= run.y < labels.LAST_CELL_Y:
+            assert reading.pixels(run.font, run.codes) <= labels.CELL_ROOM, reading.text(run)
+            assert reading.alignment(run) in ("left", "right"), reading.text(run)
+    _runs, report = screens.text_runs(changed)
+    assert report["unreadable"] == 0 and report["unterminated"] == 0
+
+
+def test_every_copy_of_the_spare_4_page_gets_a_wrapped_name():
+    payload = _named("H880-Spare-4.EZHex")
+    reading = labels.read(payload)
+    names = [cell.text(reading) for cell in labels.cells(reading)]
+    assert {"TV", "PVR", "Mini System", "Game Console"} <= set(names)
+    changed, _notes = labels.rename(payload, {"Game Console": "Xbox Console"})
+    tptp.validate(changed)
+    _reading, pages = _drawn_cells(changed, "Xbox Console")
+    assert len(pages) == 6
+    assert all([text for _y, _x, _font, text, _side in lines] == ["Xbox", "Console"]
+               for lines in pages.values())
 
 
 def test_the_build_no_longer_redraws_the_devices_page(tmp_path):
