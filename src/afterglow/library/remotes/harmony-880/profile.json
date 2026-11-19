@@ -20,9 +20,9 @@
   "infrared": {
     "native_protocols": [],
     "waveform": "class5-duration-blocks",
-    "notes": "Arch 8 (EasyZapper) stores IR as carrier frequency plus duration-run blocks. Full editing of learned codes requires the format decoder from trelowney/harmony-decompiler."
+    "notes": "Arch 8 (EasyZapper) stores IR as a carrier plus up to sixteen sets of press, hold and release duration blocks. A build writes a changed command as a new record added at the end of the image (docs/harmony_880/ir.md)."
   },
-  "notes": "Harmony 880 (arch 8, skin 15; the 885 is skin 17 and is not covered). Import reads an image's devices and their infrared commands and keeps the image with the project; a build renames the devices whose labels changed in that image, with the codes that image's own glyphs have, closes it again and checks it the way the remote's start check does (docs/harmony_880/tptp.md). A configuration cannot be built from nothing yet. No boot of an Afterglow-built image, showing its labels, is recorded here, so the profile is not verified.",
+  "notes": "Harmony 880 (arch 8, skin 15; the 885 is skin 17 and is not covered). Import reads an image's devices and their infrared commands and keeps the image with the project; a build renames the devices whose labels changed in that image, with the codes that image's own glyphs have, rewrites the commands whose signal changed, closes it again and checks it the way the remote's start check does (docs/harmony_880/tptp.md). A device deleted in the project is taken off the Devices menu (docs/harmony_880/devices.md), though its commands and the activities that use it stay in the image. Devices and commands cannot be added yet, and a configuration cannot be built from nothing. No boot of an Afterglow-built image, showing its labels, is recorded here, so the profile is not verified.",
   "schema": "afterglow-remote/1",
   "interface": {
     "type_icons": {

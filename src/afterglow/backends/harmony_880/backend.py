@@ -21,7 +21,8 @@ from pathlib import Path
 from typing import Any
 
 from ..contracts import BuildResult, ImportResult
-from . import labels, tptp
+from . import devices as menu
+from . import ir, labels, tptp
 
 log = logging.getLogger(__name__)
 
@@ -30,6 +31,8 @@ MAGIC = tptp.MAGIC
 # somewhere on the disk. {"sha256", "size", "zlib_b64"}.
 BASE_KEY = "h880_base"
 LEGACY_BASE_KEY = "h880_payload"
+# the infrared groups the imported image has, one for each device it lists
+GROUPS_KEY = "h880_groups"
 
 # Which key raises which scan code, as far as Logitech's own compiles for skin 15 can say
 # (the community's harmony-explorations, tests/harmony_880_885/test_harmony_880_keys.py).
@@ -354,12 +357,19 @@ def _ir_and_bindings(blob: bytes):
                 n = used.get(base, 0)
                 used[base] = n + 1
                 name = base if n == 0 else f"{base}_{n + 1}"
+                try:
+                    signal = ir.decode(rec, name=name)
+                except (ir.IRError, ValueError) as exc:
+                    # kept as a rough waveform to look up, but not written back
+                    log.info("880 import: group %d record %d is left as it is: %s", gi, ri, exc)
+                    signal = None
                 cmds.append({
                     "name": name,
                     "label": label,
                     "button": btn,
                     "carrier": round(rec.carrier_hz) if rec.carrier_hz else None,
                     "pulses": pulses[:120],
+                    "signal": signal,
                 })
             except Exception:       # one unreadable record must not hide the others
                 log.warning("880 import: group %d record %d is unreadable", gi, ri,
@@ -412,14 +422,21 @@ def import_project(source: Any, profile: Any, context: dict) -> ImportResult:
                             continue
                         started = True
                     signed.append(us if p["mark"] else -us)
-                sig = {
-                    "schema": "afterglow-ir-signal/1",
-                    "kind": "waveform",
-                    "name": c["label"],
-                    "pulses_us": signed,
-                    "carrier_hz": c["carrier"] or 38000,
-                    "native": {"button": c["button"], "group_cmd": c["name"]},
-                }
+                native = {"button": c["button"], "group_cmd": c["name"]}
+                if c.get("signal"):
+                    # the command as the record says it: press, hold, toggle and all
+                    sig = dict(c["signal"], name=c["label"])
+                    native.update(sig["native"])
+                    sig["native"] = native
+                else:
+                    sig = {
+                        "schema": "afterglow-ir-signal/1",
+                        "kind": "waveform",
+                        "name": c["label"],
+                        "pulses_us": signed,
+                        "carrier_hz": c["carrier"] or 38000,
+                        "native": native,
+                    }
                 # Non-NEC (RC5 etc.) often fails the waveform fingerprint.
                 # If the catalog recognises it, keep a protocol form too so
                 # device_match can render and look that up.
@@ -427,9 +444,14 @@ def import_project(source: Any, profile: Any, context: dict) -> ImportResult:
                     from ... import ir_recognise
                     hit = ir_recognise.recognise(sig)
                     if hit:
+                        hit["native"] = sig["native"]
                         sig = hit
                 except Exception:
                     pass
+                if c.get("signal"):
+                    # what a build compares with: a command that still says this is not
+                    # written again, one that says something else replaces its record
+                    sig["native"] = {**sig["native"], "digest": ir.digest(sig)}
                 signals[c["name"]] = sig
         label = name.replace("_", " ")
         _SCREEN = {
@@ -444,6 +466,9 @@ def import_project(source: Any, profile: Any, context: dict) -> ImportResult:
             "label": label,
             "_display": label,
             "_imported": True,
+            # the infrared group the device was read from: what a build takes off the
+            # Devices menu when the device is gone from the project
+            **({"_group": i} if ir_groups and i < len(ir_groups) else {}),
             # Blank so the Devices tab shows "Find model" (device_match).
             "mfr": "",
             "model": "",
@@ -462,7 +487,8 @@ def import_project(source: Any, profile: Any, context: dict) -> ImportResult:
         "name": context.get("name") or "Harmony 880 import",
         "devices": devices,
         "activities": activities,
-        "settings": {BASE_KEY: _pack_base(blob)},
+        "settings": {BASE_KEY: _pack_base(blob),
+                     GROUPS_KEY: list(range(len(ir_groups or [])))},
         "notes": [f"names={len(records)} ir_groups={len(ir_groups) if ir_groups else 0} "
                   f"activities={len(activities)}"],
     }
@@ -474,8 +500,44 @@ def import_project(source: Any, profile: Any, context: dict) -> ImportResult:
     )
 
 
+def _ir_changes(devices: list[dict]) -> tuple[dict, list[str]]:
+    """The commands whose signal is not what the import read from their record, as
+    ``{(group, record): Lowered}``, and a warning for each that cannot be written.
+
+    A command is known by where it was read (``native``), so renaming it, or a device,
+    does not lose it. One that was added has no record in the image to hold it - the
+    group's table has no room - and is said not to be written."""
+    from ... import ir_protocol
+
+    changes: dict[tuple[int, int], ir.Lowered] = {}
+    warnings: list[str] = []
+    for device in devices:
+        library = None
+        for name, signal in (device.get("signals") or {}).items():
+            native = signal.get("native") or {}
+            if "digest" not in native:
+                if device.get("_imported") and not ("group" in native or "group_cmd" in native):
+                    warnings.append(f"{labels.WARNING}command {name!r} of {device.get('label')!r} "
+                                    "is new: an 880's IR groups have no room for it yet, so it "
+                                    "is not written")
+                continue
+            if ir.digest(signal) == native["digest"]:
+                continue
+            if library is None:
+                library = {**ir_protocol.catalog(),
+                           **(device.get("portable_protocol_definitions") or {})}
+            try:
+                changes[(native["group"], native["record"])] = ir.lower(
+                    signal, library=library, native=native)
+            except (ir.IRError, ValueError, KeyError, LookupError) as exc:
+                warnings.append(f"{labels.WARNING}command {name!r} of {device.get('label')!r} "
+                                f"is not written, and keeps what it sent: {exc}")
+    return changes, warnings
+
+
 def build_project(project: dict, profile: Any, context: Any) -> BuildResult:
-    """Relabel the imported image for the devices whose names changed, close it, check it.
+    """Relabel the imported image for the devices whose names changed, rewrite the commands
+    whose signal changed, close it, check it.
 
     The image is the one the project was imported from (``_base_image``). What is checked
     afterwards is what the remote's start check tests, plus the layout every known image
@@ -491,7 +553,8 @@ def build_project(project: dict, profile: Any, context: Any) -> BuildResult:
     original = len(blob)
     devices = project.get("devices") or []
     context.log(f"overwriting {len(devices)} device slot(s) in place")
-    # names are changed where the image draws them (labels.rename); IR stays as imported
+    # names are changed where the image draws them (labels.rename), changed commands in
+    # their records (ir.replace)
     renames = {}
     for item in devices:
         shown = item.get("_display") or ""
@@ -507,12 +570,34 @@ def build_project(project: dict, profile: Any, context: Any) -> BuildResult:
         if want and shown and want != shown:
             context.log(f"label: activity {shown!r} left as drawn")
     blob, notes = labels.rename(blob, renames)
+    gone = {int(group) for group in settings.get(GROUPS_KEY) or []} - {
+        item["_group"] for item in devices if item.get("_group") is not None}
+    if gone:
+        blob, menu_notes = menu.remove(blob, gone)
+        notes += [note if note.startswith(labels.WARNING) else "menu: " + note
+                  for note in menu_notes]
+        context.log(f"devices off the Devices menu: group(s) {sorted(gone)}; their commands "
+                    "and the activities that use them are still in the image")
+    for item in devices:
+        if not item.get("_imported") and item.get("_group") is None:
+            notes.append(f"{labels.WARNING}device {item.get('label')!r} is new: an 880 image "
+                         "has no infrared group, mode or menu place made for it yet, so it "
+                         "is not written")
     warnings = [note for note in notes if note.startswith(labels.WARNING)]
     for note in notes:
-        context.log(note if note in warnings else "label: " + note)
+        context.log(note if note in warnings or note.startswith("menu: ") else "label: " + note)
     if warnings:
         context.log(f"{len(warnings)} name(s) did not fit and were cut off - see the warning "
                     "line(s) above")
+    commands, ir_warnings = _ir_changes(devices)
+    ir_notes: list[str] = []
+    if commands:
+        blob, ir_notes = ir.replace(blob, commands)
+    for note in ir_notes:
+        context.log("ir: " + note)
+    for note in ir_warnings:
+        context.log(note)
+    warnings += ir_warnings
     blob = bytes(_seal(bytearray(blob)))
     context.log(f"payload {len(blob)} bytes (imported was {original})")
     validation = tptp.validate(blob)       # raises, naming what the remote would refuse
@@ -528,7 +613,8 @@ def build_project(project: dict, profile: Any, context: Any) -> BuildResult:
     output.parent.mkdir(parents=True, exist_ok=True)
     ezhex.pack_standalone(str(work), str(output), profile=profile, log=context.log)
     return BuildResult(artifact=output, validation=validation,
-                       changes={"renamed": renames, "notes": notes, "warnings": warnings},
+                       changes={"renamed": renames, "notes": notes, "warnings": warnings,
+                                "ir": ir_notes},
                        metadata={"backend": "harmony-880", "generator": "relabel-import",
                                  "size": len(blob)})
 

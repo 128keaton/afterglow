@@ -26,6 +26,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
   right edge, and a name too long for its room is drawn in full on every copy of the page. What
   cannot be done is left alone, whole, and said. The old rewrite of the Devices page, which
   lost its pictures, is gone.
+- **An 880's infrared commands are read whole, and a changed one is written back.** Import
+  reads each record's press, hold and release and a toggling command's second set, so a
+  command keeps its repeat and its lead-in instead of one flattened waveform, and remembers
+  which record it came from, so renaming it or its device does not lose it. A build writes
+  each command whose signal changed - a waveform, or a protocol from Find model's library -
+  as a new record added at the end of the image, with the group's entry pointed at it, and
+  leaves the rest as it was. A command that cannot be written is left as it was and warned of.
+  All 1,833 commands of six images read and write back unchanged. Not yet tried on a remote.
+- **An 880 build takes a deleted device off the Devices menu.** Every copy of the page - one
+  for idle and one for each activity - is read as cells with their pictures, names and soft
+  keys, and a device that is gone from the project is taken out of all of them, the ones
+  after it moving up a place. It is the menu only: the device's commands, modes and the
+  activities that use it stay in the image, so what the remote does is as it was. A menu
+  that does not read the same on every copy is left alone and warned of. A device added in
+  the project is warned of and not written yet. Not yet tried on a remote.
 - **An 880 renames a device the page wraps over two lines.** The Devices page draws
   "Digital Set Top Box" as `Digital Set` over `Top Box`, so renaming it changed the one place
   that draws it whole and the page still said the old name. The page's cells are now read as
