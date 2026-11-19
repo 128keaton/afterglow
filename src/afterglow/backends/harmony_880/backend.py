@@ -507,8 +507,12 @@ def build_project(project: dict, profile: Any, context: Any) -> BuildResult:
         if want and shown and want != shown:
             context.log(f"label: activity {shown!r} left as drawn")
     blob, notes = labels.rename(blob, renames)
+    warnings = [note for note in notes if note.startswith(labels.WARNING)]
     for note in notes:
-        context.log("label: " + note)
+        context.log(note if note in warnings else "label: " + note)
+    if warnings:
+        context.log(f"{len(warnings)} name(s) did not fit and were cut off - see the warning "
+                    "line(s) above")
     blob = bytes(_seal(bytearray(blob)))
     context.log(f"payload {len(blob)} bytes (imported was {original})")
     validation = tptp.validate(blob)       # raises, naming what the remote would refuse
@@ -524,7 +528,7 @@ def build_project(project: dict, profile: Any, context: Any) -> BuildResult:
     output.parent.mkdir(parents=True, exist_ok=True)
     ezhex.pack_standalone(str(work), str(output), profile=profile, log=context.log)
     return BuildResult(artifact=output, validation=validation,
-                       changes={"renamed": renames, "notes": notes},
+                       changes={"renamed": renames, "notes": notes, "warnings": warnings},
                        metadata={"backend": "harmony-880", "generator": "relabel-import",
                                  "size": len(blob)})
 

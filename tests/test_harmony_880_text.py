@@ -428,20 +428,43 @@ def test_a_bracketed_name_is_found_by_the_bracketed_end_of_the_device_name():
     assert "Stereo" in _cell_texts(changed) and "(DVD, CD, Radio)" not in _cell_texts(changed)
 
 
-def test_a_name_that_needs_two_lines_in_a_cell_of_one_is_not_drawn_and_said():
+def test_a_name_that_needs_two_lines_in_a_cell_of_one_is_cut_to_one_and_warned_of():
     """'TV' has one line; the page has nothing there to draw a second with."""
     payload = _named("Update.EZHex")
     changed, notes = labels.rename(payload, {"TV": "Living Room TV"})
-    assert _cell_texts(changed) == _cell_texts(payload)
-    assert any("needs two lines" in note and "left as it is" in note for note in notes)
+    tptp.validate(changed)
+    assert "Living" in _cell_texts(changed)
+    warning = [note for note in notes if note.startswith(labels.WARNING)]
+    assert len(warning) == 1 and "'Room TV' is cut off" in warning[0]
 
 
-def test_a_name_of_three_lines_is_not_done_in_part():
+def test_a_name_of_three_lines_keeps_two_and_the_third_is_cut_off_and_warned_of():
     payload = _named("Update.EZHex")
     changed, notes = labels.rename(
         payload, {"Digital Set Top Box": "Digital Set Top Box And Another"})
-    assert _cell_texts(changed) == _cell_texts(payload)
-    assert any("does not fit" in note for note in notes)
+    tptp.validate(changed)
+    _reading, pages = _drawn_cells(changed, "Digital Set Top Box")
+    assert len(pages) == 6
+    for lines in pages.values():
+        assert [text for _y, _x, _font, text, _side in lines] == ["Digital Set", "Top Box"]
+    warning = [note for note in notes if note.startswith(labels.WARNING)]
+    assert len(warning) == 1 and "And Another" in warning[0]
+
+
+def test_a_word_wider_than_a_cell_is_cut_to_fit_it_and_warned_of():
+    payload = _named("Update.EZHex")
+    changed, notes = labels.rename(payload, {"TV": "Televisionary"})
+    tptp.validate(changed)
+    reading = labels.read(changed)
+    cell = next(c for c in labels.cells(reading) if c.text(reading).startswith("Televis"))
+    assert reading.pixels(cell.lines[0].font, cell.lines[0].codes) <= labels.CELL_ROOM
+    assert any(note.startswith(labels.WARNING) and "is cut off" in note for note in notes)
+
+
+def test_a_name_that_fits_gives_no_warning():
+    payload = _named("Update.EZHex")
+    _changed, notes = labels.rename(payload, {"Digital Set Top Box": "Satellite Box"})
+    assert not [note for note in notes if note.startswith(labels.WARNING)]
 
 
 @pytest.mark.parametrize("name, new", [

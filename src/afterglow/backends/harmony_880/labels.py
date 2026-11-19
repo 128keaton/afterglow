@@ -34,6 +34,7 @@ CELL_ROOM = 58
 LINE_STEP = 13
 FIRST_CELL_Y = 20
 LAST_CELL_Y = 150
+WARNING = "warning: "       # a note that starts with this is something to look at
 
 
 @dataclass(frozen=True)
@@ -135,9 +136,14 @@ def _names_cell(cell_text: str, old: str) -> bool:
         cell_text.startswith("(") and old.endswith(" " + cell_text)))
 
 
-def _wrap(reading: Reading, text: str, face: int, room: int = CELL_ROOM) -> list[str] | str:
-    """``text`` broken between its words into at most two lines that each fit ``room``, as
-    the cell draws a long name, or the reason it cannot be."""
+def _wrap(reading: Reading, text: str, face: int, max_lines: int = 2,
+          room: int = CELL_ROOM) -> tuple[list[str], str] | str:
+    """``text`` broken between its words into at most ``max_lines`` lines that each fit
+    ``room``, as the cell draws a long name; or the reason it cannot be drawn at all.
+
+    What does not fit is cut off, never drawn over the next cell: the lines past the last the
+    cell has, and the end of a single word wider than the cell. Returns ``(lines, cut)``,
+    ``cut`` being what was dropped (empty when nothing was)."""
     code_map = reading.maps[face]
     missing = sorted({char for char in text if not code_map.codes_for(char)})
     if missing:
@@ -146,20 +152,25 @@ def _wrap(reading: Reading, text: str, face: int, room: int = CELL_ROOM) -> list
     def width(line: str) -> int:
         return reading.pixels(face, code_map.encode(line))
 
+    cut: list[str] = []
     lines: list[str] = []
     for word in text.split():
+        if width(word) > room:
+            kept = word
+            while kept and width(kept) > room:
+                kept = kept[:-1]
+            cut.append(word[len(kept):])
+            word = kept
+        if not word:
+            continue
         if lines and width(f"{lines[-1]} {word}") <= room:
             lines[-1] += f" {word}"
         else:
             lines.append(word)
     if not lines:
         return "there is no text to draw"
-    for line in lines:
-        if width(line) > room:
-            return f"{line!r} is {width(line)} pixels wide and does not fit in the {room} a cell holds"
-    if len(lines) > 2:
-        return f"{text!r} needs {len(lines)} lines and a cell has two, and does not fit"
-    return lines
+    cut = [*lines[max_lines:], *cut]
+    return lines[:max_lines], " ".join(cut)
 
 
 def _same_face(reading: Reading, first: int, second: int) -> bool:
@@ -322,22 +333,22 @@ def _plan_cell(reading: Reading, cell: Cell, new: str):
 
     The name is wrapped to the cell as the page wraps a long one. Text that fits one line goes
     on the lower line, where the page puts a one-line name, and a second line the old name
-    had is blanked. A name that needs two lines in a cell that has one cannot be drawn: the
-    page has nothing there to draw a line with, and a line cannot be added without moving
-    what follows it. Every line is planned before any is written."""
-    lines = first_error = None
+    had is blanked. Lines past the last the cell has are cut off - a second line is a new
+    instruction, and one cannot be added without moving what follows it - and what was cut
+    is returned to be warned of. Every line is planned before any is written.
+
+    Returns ``(plans, cut)`` or the reason the cell cannot be redrawn."""
+    wrapped = first_error = None
     for face in _faces(reading, cell.lines[-1]):
-        got = _wrap(reading, new, face)
+        got = _wrap(reading, new, face, len(cell.lines))
         if isinstance(got, str):
             first_error = first_error or got
         else:
-            lines = got
+            wrapped = got
             break
-    if lines is None:
+    if wrapped is None:
         return first_error
-    if len(lines) > len(cell.lines):
-        return (f"{new!r} needs two lines ({' / '.join(lines)}) and the cell has one "
-                "to draw it on, and does not fit")
+    lines, cut = wrapped
     texts = [""] * (len(cell.lines) - len(lines)) + lines
     plans = []
     for run, text in zip(cell.lines, texts):
@@ -345,7 +356,7 @@ def _plan_cell(reading: Reading, cell: Cell, new: str):
         if isinstance(plan, str):
             return plan
         plans.append((run, text, plan))
-    return plans
+    return plans, cut
 
 
 def rename(payload: bytes, renames: dict[str, str]) -> tuple[bytes, list[str]]:
@@ -423,11 +434,12 @@ def rename(payload: bytes, renames: dict[str, str]) -> tuple[bytes, list[str]]:
         named = [cell for cell in pages if _names_cell(cell.text(reading), old)]
         handled = {run.at for cell in named for run in cell.lines}
         for cell in named:
-            plans = _plan_cell(reading, cell, new)
+            planned = _plan_cell(reading, cell, new)
             where_ = f"the Devices page cell at {cell.lines[0].at:#x}"
-            if isinstance(plans, str):
-                notes.append(f"{old!r} in {where_}: {plans}, left as it is")
+            if isinstance(planned, str):
+                notes.append(f"{old!r} in {where_}: {planned}, left as it is")
                 continue
+            plans, cut = planned
             total = {"place": 0, "grown": 0, "pointed": 0, "moved": 0}
             for _run, _text, (operations, counts) in plans:
                 apply(operations)
@@ -436,6 +448,9 @@ def rename(payload: bytes, renames: dict[str, str]) -> tuple[bytes, list[str]]:
             drawn = [text for _run, text, _how in plans if text]
             notes.append(f"{old!r} -> {new!r} on {len(drawn)} line(s) as "
                          f"{' over '.join(map(repr, drawn))} ({summary(total)})")
+            if cut:
+                notes.append(f"{WARNING}{old!r} -> {new!r} does not fit its cell of "
+                             f"{len(cell.lines)} line(s) of {CELL_ROOM} pixels: {cut!r} is cut off")
         runs = [run for run in find(reading, old) if run.at not in handled]
         if not runs and not named:
             notes.append(f"{old!r}: not drawn as a whole string in the image, left as it is")

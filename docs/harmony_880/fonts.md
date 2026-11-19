@@ -151,15 +151,19 @@ space (or by the bracketed end of the device's name: the page draws `(DVD,` over
 - the new name is wrapped between its words into at most two lines of 58 pixels, the widest
   label in the sixteen images being 57;
 - two lines go on the cell's two strings, one line on the lower with the upper blanked (spaces);
-- a name that needs two lines in a cell of one is **not drawn**: a second line is a new
-  instruction, and nothing here can add one without moving what follows it. It is left as it is
-  and the note says so;
+- what does not fit is **cut off, with a warning**: the lines past the last the cell has (a
+  second line is a new instruction, and nothing here can add one without moving what follows
+  it, so a one-line cell keeps one), and the end of a word wider than the cell. The build log
+  has a `warning:` line naming what was cut, and the build's `changes["warnings"]` holds it;
 - the two lines of a cell are not always in the same font set - `Digital Set` is in set 8 and
   `Top Box` in set 7 in `Update.EZHex`, the other way round in `H880-Spare-4.EZHex` - and a set
   holds only the letters its image's pages use (set 8 has no `B` and no `F`). Where two sets draw
   the same picture for every character they share, a line is drawn from the one that has the
   letters: the `10 n` that chooses its font, in each copy of the page, is changed to it. That is
   done only when the `10 n` belongs to that string alone.
+
+Text sits at the bottom of its cell and at the cell's own edge: bottom left in the four left-hand
+cells, bottom right (ending at x = 125) in the four right-hand ones.
 
 Nothing after the old trailer moves, the image is sealed again, and every program of the result
 still reads. Nothing here has been put on a screen except `TV Wheel` (a renamed single line,

@@ -32,8 +32,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
   one device each, the new name is wrapped to the cell as the page wraps a long one - or put
   on the lower line, with the upper blanked, when it fits one - and every copy of the page
   is redrawn. Letters the upper line's font set lacks are drawn from the set that has them
-  where it draws the same face. A name that needs two lines in a cell that has one is left
-  as it is and said.
+  where it draws the same face. What does not fit - a third line, a second line in a cell
+  that has one, the end of a word wider than the cell - is cut off, and the build log says so
+  in a `warning:` line.
 
 ### Fixed
 
