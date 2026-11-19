@@ -1,0 +1,147 @@
+{
+  "id": "harmony-880",
+  "model": "Harmony 880",
+  "identity": {
+    "arch": 8,
+    "skin": 15,
+    "flash": "0x01:0x49",
+    "board": "1.8.0",
+    "software_type": 0
+  },
+  "payload": "blob",
+  "backend": "harmony-880",
+  "status": "experimental",
+  "capabilities": {
+    "touchscreen": false,
+    "ir_learning": true,
+    "hard_keys": true,
+    "lcd_softkeys": true
+  },
+  "infrared": {
+    "native_protocols": [],
+    "waveform": "class5-duration-blocks",
+    "notes": "Arch 8 (EasyZapper) stores IR as carrier frequency plus duration-run blocks. Full editing of learned codes requires the format decoder from trelowney/harmony-decompiler."
+  },
+  "notes": "Harmony 880 (arch 8, skin 15; the 885 is skin 17 and is not covered). Import reads an image's devices and their infrared commands and keeps the image with the project; a build renames the devices whose labels changed in that image, with the codes that image's own glyphs have, closes it again and checks it the way the remote's start check does (docs/harmony_880/tptp.md). A configuration cannot be built from nothing yet. No boot of an Afterglow-built image, showing its labels, is recorded here, so the profile is not verified.",
+  "schema": "afterglow-remote/1",
+  "interface": {
+    "type_icons": {
+      "folder": "icons",
+      "fallback": "devices/Monitor"
+    },
+    "_comment": "Minimal interface for experimental 880 support. Soft-key pages are the primary way custom commands are exposed; hard keys are fixed. Full screen editing is not yet implemented.",
+    "tabs": [
+      "devices",
+      "activities",
+      "settings",
+      "flash"
+    ],
+    "screen_grid": {
+      "device": [
+        2,
+        4
+      ],
+      "activity": [
+        2,
+        3
+      ]
+    },
+    "device_pages": [
+      "search",
+      "identity",
+      "commands",
+      "screen",
+      "inputs"
+    ],
+    "activity_pages": [
+      "identity",
+      "roles",
+      "screen_buttons",
+      "hard_buttons",
+      "startup",
+      "power"
+    ],
+    "timing": [
+      "power_delay",
+      "press_interkey"
+    ],
+    "settings": [
+      "output_file",
+      "language",
+      "assistant",
+      "welcome"
+    ],
+    "languages": [
+      [
+        "English",
+        "enu"
+      ]
+    ]
+  },
+  "vocabulary": {
+    "_comment": "Device types are the Logitech names the shipped icons carry. The keys are the ones whose scan code Logitech's own compiles for skin 15 establish (the community's harmony-explorations) and that art.json draws; Play is established but not drawn, and no 880 has been pressed on a unit.",
+    "device_types": {
+      "Amplifier": "Amplifier",
+      "CableBox": "Cable / set-top box",
+      "DvdCd": "DVD / CD player",
+      "GameConsole": "Games console",
+      "HomeAppliance": "Home appliance",
+      "Pvr": "PVR / DVR",
+      "Receiver": "AV receiver",
+      "Satellite": "Satellite",
+      "Television": "Television"
+    },
+    "activity_types": [
+      [
+        "Watch TV",
+        "VirtualTelevisionN"
+      ],
+      [
+        "Watch a DVD",
+        "VirtualDvd"
+      ],
+      [
+        "Listen to a CD",
+        "VirtualCdMulti"
+      ],
+      [
+        "Play a game",
+        "VirtualGameConsole"
+      ],
+      [
+        "Other",
+        "VirtualGeneric"
+      ]
+    ],
+    "hard_keys": [
+      "VolumeMute",
+      "VolumeUp",
+      "DirectionLeft",
+      "VolumeDown",
+      "DirectionUp",
+      "Menu",
+      "Exit",
+      "Stop",
+      "Record",
+      "Rewind",
+      "Number1",
+      "Number4",
+      "Number8",
+      "Number7",
+      "Number0",
+      "Select",
+      "DirectionDown",
+      "DirectionRight",
+      "ChannelDown",
+      "ChannelUp",
+      "Info",
+      "FastForward",
+      "Pause",
+      "Number2",
+      "Number3",
+      "Number6",
+      "Number5",
+      "Number9"
+    ]
+  }
+}

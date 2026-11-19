@@ -1,972 +1,1943 @@
 # Changelog
 
+
+
 All notable changes to Afterglow will be documented in this file.
+
+
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+
 ## [Unreleased]
+
+
 
 ### Added
 
+
+
 - **The Harmony 880, experimental.** Import reads an 880's devices and their infrared
+
   commands, with the community's decompiler now bundled, and keeps the image with the
+
   project. A build renames the devices whose names changed in that image, closes it again
+
   and checks it the way the remote's own start check does - the cookie, the marker, the
+
   closing `DKDK` and the checksum - so an image that would make the remote show "Go to
+
   Website to update settings" or "Configuration Corrupted" is refused with the reason.
+
   `tools/harmony_880_check.py` checks a configuration, a firmware package or a 64 KiB
+
   flash image the same way, and refuses a bootloader that would leave the remote with no
+
   program to run.
 
+
+
 - **An 880's text is read from the image, not from a table.** Each configuration numbers
+
   its glyphs in its own order, so the letter codes one image used were wrong in the next.
+
   The font table, the glyphs and the screen programs are now read, and a code is read by
+
   the shape its glyph draws; renaming a device writes the new name with that image's own
+
   codes, in the font each place is drawn in; a label in a right-hand cell keeps ending at the
+
   right edge, and a name too long for its room is drawn in full on every copy of the page. What
+
   cannot be done is left alone, whole, and said. The old rewrite of the Devices page, which
+
   lost its pictures, is gone.
+
+
 
 ### Fixed
 
+
+
 - **An activity's Physical buttons say what a key left at Default sends**, such as
+
   "Default: VU Duo2 - Rot". A key that does something else because its device's own
+
   key does (a receiver whose Record sends Red) read just "Default", as if what was
+
   read from the remote had been lost.
+
 - **Harmony One and 800: Activities on the Activities menu with nothing running opens
+
   its first page**, as Logitech's configurations do; it did nothing. With an activity
+
   running it goes back to that activity, as before.
+
 - **An 880 build no longer starts from the newest backup.** It took the newest file in the
+
   Dumps folder as its base, so a damaged image read back from the remote became the input
+
   of every later build; it also sealed an image that had lost its end marker without
+
   saying so. It builds from the image the project was imported from.
+
 - **Reset Remote crashed.** It reset before identifying the remote, which libconcord
+
   needs. Set Clock called libconcord's `set_time` with no arguments first, where it takes
+
   a callback; it is now always called with one.
+
+
 
 ## [0.3.0-beta.7.1] - 2026-11-16
 
+
+
 ### Changed
 
+
+
 - **The Harmony One is supported.** Configurations built for it have booted and run on
+
   testers' remotes since 0.3.0-beta.2.1, with no failure reported, and a One's own
+
   configuration now reads back with its settings, its look and its text. A write asks
+
   once, as the 900's does, and no longer saves the remote first: use Read from Remote to
+
   keep what is on it.
+
+
 
 ### Added
 
+
+
 - **A One's, 650's or 700's commands go across to the Harmony 900 and 1100.** These
+
   remotes keep a command as a recording of its press and of what it repeats while held,
+
   which the 900 cannot store; each is now sent as the command it is, recognised by
+
   rendering it back - NEC and its "still held" frame, Sony, RC5 and RC6 with their toggle,
+
   Samsung, RC-MM and what it sends on release, and codes of their own shape. Every
+
   command in the configurations testers have shared now goes across, where hundreds per
+
   remote used to be dropped.
+
 - **Find model**, on the Devices tab: a device with no manufacturer or model - as a
+
   One's devices come - is matched against Logitech's database by the codes it sends and
+
   its name, and the model you pick names the device and the commands the configuration
+
   left unnamed.
+
 - **Reading a Harmony One back keeps more of it:** how long the screen stays lit, the
+
   12- or 24-hour clock, whether the Remote Assistant is shown, the language, and a
+
   custom look, which comes back as a theme of its own. The One, 650, 700 and 800 read
+
   text in any script their fonts draw, Cyrillic included, and say what an import leaves
+
   out.
+
 - **Long softkey labels wrap onto two lines on the Harmony One**, as Logitech's "Current
+
   Activity" does; French reads "Activité en cours" again.
+
 - **A press sends at least the frames Logitech's database asks for** on the 900 and
+
   1100, for devices that need a code repeated before they act.
+
+
 
 ### Fixed
 
+
+
 - **Harmony 900 and 1100: an activity no longer hangs while it starts** when a device
+
   has no model or a non-numeric id, as a configuration converted from a One had.
+
 - **A letter Afterglow cannot read in an imported configuration reads as "?"** and no
+
   longer stops the build; the import names what had one, and asks for the configuration
+
   in an Issue so the letter can be learned.
+
 - **Harmony One: the Devices list and a device's pages show which page you are on**;
+
   only the number of pages was drawn, as the "Current Activity" softkey ended the page
+
   before its number.
+
+
 
 ## [0.3.0-beta.7] - 2026-11-16
 
+
+
 ### Added
 
+
+
 - **New: the Harmony 600, 650, 665 and 700, experimental.** Afterglow reads their
+
   configurations and builds and writes new ones from a project, with what these remotes do:
+
   - Logitech's own layout: the Activities menu, the Devices list, each device's and
+
     activity's pages, Starting and Turning off, Help and Delay Fixing, the Remote
+
     Assistant's note, and a welcome tour after the first flash (Settings, "Welcome after
+
     flashing").
+
   - The activity keys - Watch TV, Watch a Movie, Listen to Music - each set to the activity
+
     you choose, on the activity's first page or in the remote's picture.
+
   - Favourite channels by name; these remotes draw no logos.
+
   - Devices' delays, menu inputs, RC5/RC6 commands, and MyHarmony's backlight time and
+
     tilt-to-wake.
+
   - The 600 and 665 are 650s under their own model numbers, the 600 in its own grey look;
+
     the status bar names the exact model, and Change remote moves a project between them.
+
   - Every word they show comes from one translatable catalogue, English for now.
+
 - **Menu inputs on every remote.** A device whose inputs are a menu - Source, then Up or
+
   Down, then OK, as Logitech's database has many televisions - keeps its way in and out
+
   when it comes from the database or a configuration, and the 900, 1100, One and 800
+
   send it so.
+
 - **A device's inter-key delay on the One and 800** is the hold of the codes Help sends
+
   to fix it, as Logitech writes it, and is read from their configurations.
+
 - **A welcome after flashing on the Harmony One and 800**, as Logitech's One shows it:
+
   the Remote Assistant's welcome, then the Tutorial, once after a write. Settings has a
+
   "Welcome after flashing" choice - first flash only, every flash or never - and "first"
+
   is decided before the write from whether the remote held one of Afterglow's
+
   configurations.
+
 - **How long the screen stays lit, and a 24-hour clock, on the Harmony One and 800**, in
+
   Settings. The 24-hour clock is the European One's: hours 00 to 23 and no AM/PM step.
+
 - **Each activity lists its own devices first** on the Harmony One and 800, as
+
   Logitech's compiles do: while it runs, Devices shows the devices it switches on first.
+
 - **Harmony One: Logitech's favourite channels are imported**; those sent through the
+
   remote's number sender used to be lost.
+
 - **The Harmony 900 can welcome you after a write**: the remote's own first-time setup,
+
   which tests each device and walks through the rest, runs on the first start after a
+
   write the app marks as a welcome (`settings["welcome"]`). A 900 or 1100 configuration
+
   read off a remote is now known as an Afterglow build or not (`afterglow_built`), so the
+
   app can tell a first write from a later one.
 
+
+
 - **Bold text on the Harmony One and 800, where Logitech's own One draws it**: every
+
   label, title and softkey but the message text. Galmuri has no bold at the One's size,
+
   so each bold letter - Latin with its accents, Greek, Cyrillic - was drafted and then
+
   checked and corrected by hand; the 800 uses Galmuri 11 Bold, its designer's own, with
+
   the letters it lacks drawn the same way. The fonts are Galmuri Afterglow
+
   (`tools/galmuri/`, built by `tools/galmuri_afterglow.py`), under the OFL.
+
 - **An activity's name wraps onto a second line while it starts** ("Starting ..."), on
+
   the One and the 800, in every language, before it is cut.
+
 - **Long labels wrap onto a second line in Options** - rows and the date, time and
+
   sensitivity buttons - on the One and the 800, as buttons already did, before anything
+
   is cut.
+
 - **The One and the 800 can be translated into any of the European languages written in
+
   Latin, Greek or Cyrillic**: every face, in every size and weight, now draws their
+
   letters - Romanian's ș ț, Azerbaijani's ə, Greek capitals with tonos - and the
+
   punctuation they set: typographic quotes and dashes, the ellipsis, €, №, and the narrow
+
   no-break space French puts before : ; ! ?
+
 - **French on the Harmony One and 800**, translated by MickBim from the One's own French,
+
   with French spacing before "?", "!" and ":", which never wraps onto a line of its own.
+
   A `.po` file with a broken escape is refused rather than read wrongly.
+
 - **Bulgarian on the Harmony One and 800.** A remote's languages are now the translations
+
   beside it: putting a `locale/<language>.po` there makes the language appear in Remote
+
   Settings, named in its own language.
+
 - **The log says what libconcord did** in every session with the remote, so a log sent with
+
   a bug report shows which request a remote turned down instead of "Unknown error". It is
+
   kept short: the last 200 lines, none per packet, no serial numbers, and the log file
+
   still stops at two of a megabyte.
+
+
 
 ### Changed
 
+
+
 - **Builds of the Harmony One and 800 are several seconds quicker.** Every build
+
   encoded each of the scaffold's pictures pixel by pixel, twice; the encoded pictures are
+
   now kept until their file changes. What is built is byte for byte the same.
+
 - **Saving a device adds no timing fields its remote does not use.**
+
 - **A delay written as text in a project file is read as a number**, or refused by name.
+
 - **The remote's picture in the editors can be used from the keyboard**: arrows move
+
   between keys, Enter or Space chooses one.
+
 - **Online device catalogues are opened in the background**, with a Cancel, instead of
+
   freezing the window while their indexes download.
 
+
+
 - **Harmony One and 800 button labels wrap as Logitech's do**: before a capital after a
+
   lower case letter, so "DirectionDown" reads "Direction" over "Down"; three lines on the
+
   One's buttons.
+
 - **Off's Help with no device to ask about says "Nothing to do"** on the Harmony One and
+
   800, and an activity's page arrows take the direction pad when its device has no
+
   arrows of its own. These, the welcome tour, the screen light and the device lists
+
   follow Danny Bloe's harmony-explorations, which measured them on Logitech's compiles
+
   and on remotes.
 
+
+
 - **Device and activity icons are the project's remote's own.** A Harmony One or 800
+
   project shows the pictures that remote draws - the 800's glossy set, the One's own -
+
   in the Devices and Activities lists and in the type menus, instead of the Harmony 900's,
+
   and a device without a type shows the generic icon those remotes give it. A profile
+
   names its set in `interface.type_icons`; the 900 and 1100 keep `icons/`.
+
 - A saved or shared project records the Afterglow version that wrote it (`saved_by`), and
+
   any recordings it had repaired (`repairs`), so a later fix to how a remote plays commands
+
   can repair the projects an older version left.
+
 - **Linux downloads are AppImages**, for x86_64 and, new, ARM64 (`afterglow-linux-x86_64.AppImage`,
+
   `afterglow-linux-aarch64.AppImage`): they start without unpacking themselves first, and
+
   carry a menu entry and an icon for AppImage tools such as Gear Lever to install. They run on the same systems as before.
+
+
 
 ### Fixed
 
+
+
 - **Cancel in the activity editor kept the changes** to its keys, which the next save or
+
   flash took along. Cancel now leaves the activity as it was.
+
 - **Deleting a device that activities use** left steps, buttons and favourites pointing at
+
   nothing, and the 900 and 1100 then failed to build with a Python error. Deleting one now
+
   lists what uses it and removes those uses, and a build refuses a project naming a device
+
   or command it does not have, with a sentence saying where. A screen button or favourite
+
   that sends nothing - no command, no channel - is refused by its dialog.
+
 - **Closing the window or opening another project during a read, build or write** threw
+
   away the window the operation was reporting to. Afterglow now asks you to wait.
+
 - **A save that failed was not said**, and could leave half a file. A save now writes the
+
   whole project or nothing and says when it could not, and Save As adds `.json`.
+
 - **Afterglow would not open with an unwritable Documents folder**, or when more than one
+
   remote was verified and none chosen.
+
 - **A configuration whose header names no model was taken for a Harmony 900.** It is
+
   refused as no known remote.
+
 - **Backups of two projects with the same name, and two logos with the same file name,
+
   overwrote each other.** They keep apart.
+
 - **An Example theme you had edited was replaced** when Afterglow updated it. Your copy is
+
   kept beside the new one.
+
 - **The helper scripts Afterglow runs as root are checked against the shipped ones**
+
   just before running, not only at install.
+
 - **Every note at start-up is shown**, not only the first.
+
  reaches the remote on Arch and other systems without
+
   `libcrypt.so.1`.** Its libconcord loads Kerberos through libcurl, which needs that library,
+
   and the bundle left it to the system; it now carries it, and the build fails if anything
+
   else libconcord loads is missing from the bundle. When a bundled libconcord does not load,
+
   Afterglow names the library it lacks instead of saying libconcord was not found.
+
 - **The Harmony 1100's Remote Assistant setting works.** It was written to a preference
+
   file the remote overwrites on the first start after every write, so the assistant came
+
   on whatever the setting said. It now goes into the configuration, where the 1100 reads
+
   it, and is the same Remote Assistant checkbox the One and 800 have. A project saved
+
   with it Off keeps it off.
+
 - **Harmony 1100 commands an older Afterglow got wrong are repaired.** The 1100 keeps no
+
   protocols: importing one reads back what the build sent as recordings, and those were
+
   replayed as they were through every later fix - an MCE keyboard's Win+1 built by
+
   0.3.0-beta.5 still never released. Opening, importing or receiving a project now turns
+
   each such recording back into its protocol, from the same device saved with its
+
   protocols in your library or another project, when it is exactly what an earlier
+
   release rendered. Your own recordings and Logitech's are left as they are. The project
+
   is saved repaired, the previous version in Backups.
+
 - **The One's softkeys cut a longer word short**, and its titles had less room than the
+
   top line leaves them: a softkey's label is centred on its half of the bar and may use
+
   all of it, as on the 800, and a title has the room up to the status icons.
+
 - **The One's clock and page counters had no Cyrillic or Greek of their own**: Galmuri 7
+
   has neither. Galmuri Afterglow 7 draws them in its style.
+
 - **The 800's number pad was drawn blocky**, its digits Galmuri's doubled pixel for
+
   pixel. They are drawn for the pad's size, smooth where Galmuri curves.
+
 - **The 800's Help wrote its questions over the device's picture.** They are under it.
+
 - **The 800's transmitting waves were cut off at the top**: the outermost arc was drawn
+
   past the picture's edge. The arcs are a little smaller and whole.
+
 - **The 800's key and light test screens were part of every build**, past the last page
+
   of devices. They are only built when a project asks for them (`"key_test": true` in
+
   its settings, set by hand).
+
 - **The One's clock and page counters could not draw Greek or Cyrillic**: their small
+
   face has neither, so a translation failed to build. A character it lacks now comes from
+
   the regular face, as a theme's own font already did.
+
 - **A Harmony 1000 could not be identified** ("identifying the remote: Unknown error"):
+
   libconcord asked it for details only Logitech's website ever used, and the 1000 never
+
   answers one of them. They are no longer asked for, which also makes connecting to any
+
   900, 1000 or 1100 quicker. A 1000 sold as skin 53 is named a Harmony 1000. A remote's
+
   reply can no longer be copied past the end of the buffer it is read into.
+
 - **A Harmony 1000 can be written, and says up front that it cannot be read.** Its
+
   firmware takes a configuration but never hands one back, in Safe Mode too - Logitech's
+
   own software never read one either. Identify now says so, Read stops before asking
+
   instead of answering "Model or configuration or operation unsupported", and Write
+
   goes ahead without the backup it cannot take, saying none was taken. A written 1000
+
   recovers through its Safe Mode. The concordance command line says the same.
+
 - **Linux could not open a Harmony One or 800** without running as root: direct access
+
   gave the signed-in user only the 900, 1000 and 1100. It covers every Harmony now.
+
 - **With the Remote Assistant hidden, the screen of a Harmony One or 800 stayed lit** for
+
   as long as an activity ran, and after Off: starting one stops the timer that darkens it,
+
   and the Assistant's note was what a key press then woke it from. Hidden, the remote
+
   wakes the keys itself and the screen goes dark as before.
+
 - **A command whose release ends in a pause was refused** on the One and the 800, both
+
   reading a configuration and building one - Logitech writes an Apple TV's that way. The
+
   800's firmware plays the pause like any other, so it is kept.
+
 - **An outdated USB rule is offered as an update**, also to anyone who ticked "Don't ask
+
   again": when the rule an earlier Afterglow installed differs from the one it ships now,
+
   Afterglow says so at startup, once for each change.
+
+
 
 ## [0.3.0-beta.6] - 2026-10-29
 
+
+
 ### Added
 
+
+
 - **Leave a device as it is.** An activity's Power section offers *Leave as it is* beside
+
   Switch on and Switch off, for a device the activity should not touch. No Logitech
+
   configuration has one, so this is still to be confirmed on each remote.
+
 - **Copy a command from another device.** A device's Commands has *Copy from another
+
   device...*: the commands picked come with their codes.
+
 - **Icons on an activity's screen buttons, on the Harmony One and the 800.** The editors
+
   let a button carry an icon and the remote drew its label alone; the icon now fills the
+
   button with the label over it, as Logitech's builds draw one, and the preview shows it
+
   the same way.
+
 - A Harmony One or 800 project can start with the **Remote Assistant** hidden (Remote
+
   Settings), rather than welcomed again after every write.
+
+
 
 ### Changed
 
+
+
 - **A device's pages wrap round** on the One and the 800: past the last page to the
+
   first, and back from the first to the last, as Logitech's configurations do. They went
+
   back to the device list.
+
 - **Learn from remote takes each key twice** and keeps it only when the two presses
+
   agree; learned codes can differ from press to press.
+
 - Help's Yes and No light their softkey bars on the One and the 800.
+
 - **Writing to a remote Afterglow is unsure of asks instead of refusing.** A board
+
   revision or flash chip not yet confirmed for that model (two Harmony 900s on board 0.0
+
   were refused, and work), a configuration that looks made for another remote, and a
+
   skin number no profile knows each get their own question - *Write anyway* or *Cancel*,
+
   Cancel the default - before anything is backed up or written. A file that is not a
+
   configuration, or for no remote Afterglow writes, is still refused.
+
 - **Importing a Harmony One or 800 configuration keeps more of it**: a device's other
+
   states (Logitech's Screen, TVInput and the like), power off in several steps, commands
+
   only an activity's key or button sends, and commands that send nothing (Logitech's
+
   stand-in for a device it does not reach by infrared).
+
+
 
 ### Fixed
 
+
+
 - **A Harmony 1100 activity could stay a blank blue screen**, with red boxes where its
+
   corner buttons go, when its number pad screen was switched off. The remote falls back
+
   to the number pad whenever the screen it should open is not there, and Logitech never
+
   turns it off. The number pad is now always on, also for activities read back from an
+
   earlier build; a device without number keys gets them dimmed, as on Logitech's.
+
 - **Harmony 1100s on boards 0.0 and 0.2 were "not supported yet"** when read - two
+
   firmware-7.6 remotes, one of them issue #13. Their configurations read like any other
+
   1100's; they are recognised now, and written without asking.
+
 - **Favourites that send a command or run a macro came back as channels** when a
+
   configuration was imported again - a streaming app favourite then tuned to a channel
+
   named "Netflix" and did nothing. They import as they were built.
+
 - **Keyboard shortcuts such as Win+1 from a Media Center keyboard did nothing on the
+
   Harmony 1100.** The keyboard needs a "keys released" signal after each key, which the
+
   1100 did not send; it does now, at the end of every press, as a 900 does.
+
 - **Harmony One: the charging screens never stopped**: on the cradle the battery and
+
   photos went round for as long as the remote sat there, keeping the backlight lit for
+
   hours. As every Logitech configuration does, the ring now goes round once and the screen
+
   goes dark; a key shows it once more, and lifting the remote wakes it.
+
 - **Flipper-IRDB and IRDB devices could not be used**: their commands name a protocol -
+
   NEC, Samsung, JVC - and no definition of one shipped, so a device such as the OSSC was
+
   refused with "no IR protocol definitions are installed". The basic protocols ship now
+
   (NEC and its variants, Samsung, JVC, Sony, RC5, RC6), which the Logitech archive's
+
   commands map onto too. Flipper's and IRDB's Sony and RC5 commands are read as well, and
+
   a Flipper raw capture missing the silence after its last mark is given one.
+
 - **Renaming a device's command lost its code**, and Save then did nothing at all - the
+
   reason, "missing signals", went only to the log. The code follows the rename, and so do
+
   the power choice, inputs, number keys, the device's page and the activities using it;
+
   a device that cannot be saved says why.
+
 - **Imported labels read wrong letters**: "problem" as "probgem", "Is" as ".s", and a
+
   capital I and a lowercase l mixed up. They are told apart by their shape and their
+
   neighbours now.
+
 - An import could name a device's pages or an activity's control device differently from
+
   one run to the next when two candidates tied.
+
 - An output file named without `.ezhex` was built, and then could not be written: "no
+
   such configuration".
+
+
 
 ## [0.3.0-beta.5] - 2026-10-18
 
+
+
 ### Added
 
+
+
 - **The Harmony 800, as an experimental remote.** Logitech never sold it; Afterglow builds
+
   its configurations from a prototype's firmware and factory files, and a tester's
+
   remote runs them: activities and devices send their commands, and it sleeps and wakes
+
   as it should. Its configuration file is the one Concordance reads and writes, and
+
   Afterglow reads it back as the project it was built from. Xbox, Media Center and other
+
   RC5/RC6 devices work as on the One. The battery icon uses the One's levels: the
+
   prototype's own showed full only above 4.20 V, which a charged battery never reaches.
+
   The keyboard, the touchpad and IR learning are not supported yet.
+
+
 
 ### Fixed
 
+
+
 - **A remote whose configuration was damaged could not be repaired.** After an
+
   interrupted or failed write, libconcord reports the configuration as invalid, and
+
   Afterglow took that for a remote it could not identify - so the remote that most needed
+
   a new configuration could not be given one. The remote is now identified, and Check
+
   Connection says the configuration is damaged and how to repair it. Flash to Remote and
+
   Flash a Configuration File write over it, without first backing up the damaged one;
+
   Read refuses, as there is nothing sound to read.
+
 - **Afterglow could restart while switching a Windows remote to direct access**, with
+
   "Unexpected error: KeyError: 'result'" in its log (issue #9): it read the switch's
+
   answer a moment before the answer was there. It now waits for it, and says plainly if
+
   none came.
+
 - **A Harmony 1100 build stopped at Xbox 360 and Media Center devices** brought over
+
   from a Harmony 900, with "a backend-opaque signal has nothing to play back" for every
+
   command. Importing a 900 kept every RC5 and RC6 command - those with a toggle bit, so
+
   the device can tell a second press from a held key - in the 900's own code, which only
+
   a 900 can play. They are now imported as portable protocols like every other command,
+
   toggle bit included, and projects saved before are converted when they are opened. A
+
   rebuild for the 900 is unchanged: the same protocol programs, the same codes on air,
+
   and the same toggle declarations, now written from each protocol itself.
+
 - **The Harmony One refused Xbox, Media Center and other RC5/RC6 devices** ("protocol has
+
   sender state; Harmony One state selection is not yet mapped"). These devices need a bit
+
   that changes between presses. The One stores both versions of each such command and sends
+
   them in turn, which Afterglow now writes as Logitech does - worked out from the Harmony
+
   800's firmware and matched against every RC5/RC6 command in Logitech-made One
+
   configurations.
+
 - **Run from source, Afterglow named the wrong version** - 0.2.0 on 0.3.0 - when an
+
   older editable install was in the environment, and `python afterglow.py --version`
+
   opened the window instead of answering. The checkout's own version wins now, and every
+
   command-line flag works however Afterglow is started.
+
 - **The PlayStation 3's Stop now waits as Logitech meant it to** on the Harmony One and
+
   1100. Logitech's PS3 adapter protocol ends Stop with 6 seconds of nothing, so the
+
   remote sends nothing else until the console has stopped; a 900 does that, and the One
+
   build refused the whole configuration over it. Both remotes now end Stop with that
+
   wait; holding Stop repeats after it.
+
 - **Importing a Harmony One kept only one version of such commands**, so rebuilding it
+
   sent the same one on every press. Both are kept now, and a Harmony 1100 build of a One's
+
   devices plays them in turn too.
+
 - **Projects with commands kept in a 900's own code are converted when opened** - also the
+
   one Afterglow reopens at start - and saved straight away, the previous version kept in
+
   Backups. Devices from the library are converted as they are added.
+
+
 
 ## [0.3.0-beta.4] - 2026-10-16
 
+
+
 ### Added
 
+
+
 - **Arrange a device's own page of buttons.** Edit Device has a Screen page: pick which
+
   commands get a button on the device's page of the remote's screen, drag them into
+
   order, change what each says, leave a gap, or put one command there twice. Harmony
+
   900, 1100 and One.
+
 - **See the page as the remote shows it.** Beside a device's and an activity's screen
+
   buttons, a drawing of the remote's screen - two columns by three rows on the 900 and
+
   the One, the 1100's own grids - a page at a time, with its arrows. Click a button there
+
   to pick it in the list.
+
 - **Gaps between an activity's screen buttons**, with Add gap, on the Harmony 900, 1100
+
   and One. On the One, which Afterglow draws itself, a gap is a place with nothing drawn
+
   and nothing bound.
+
 - **The Harmony 1100's activity tabs.** An 1100 activity's screen is up to four tabs -
+
   Transport, Numbers, one of Favourites, Game controller or Discs, and a page of buttons -
+
   each with side bars down both edges. Screen buttons now shows them as the remote lays
+
   them out: turn each tab on or off, choose the one it opens on, and put a command or a
+
   macro on any place. The game controller tab shows the Xbox or PlayStation pad the
+
   remote draws for the activity's main device.
+
 - **The 1100's fixed buttons fill themselves.** Play, Pause, the number pad, the game pad
+
   and Next Disc send the activity's main device's own commands unless you choose
+
   otherwise - by name, or by the names Logitech used for them (Skip forward is
+
   NextTrack or ChapterNext on many players). Change one, set it to nothing, or put it
+
   back to the default. They follow the main device when it changes; imported activities
+
   keep exactly what they had.
+
 - **The 1100's screen editor looks like the screen.** Each corner of the display is a
+
   tab - "Top left: Transport" and so on - drawn at the remote's own 4:3 shape, scaling
+
   with the window. The fixed buttons are marked as the remote's own pictures; your side
+
   buttons can be dragged between places by their handles; the top-right corner is one
+
   choice of Favourites, Game controller or Discs, as the remote shows only one. A side
+
   button is drawn as the remote draws it, its label over its icon, and offers only the
+
   icons a side bar can show.
+
 - **Favourites as the remote shows them.** The Favourites page draws its pages beside the
+
   list - your logos, or the label where there is none, six a page in each remote's own
+
   grid. On the Harmony 1100 favourites are one of the activity's screens, so they are
+
   edited there, in the top-right corner, rather than in a section of their own.
+
+
 
 ### Fixed
 
+
+
 - **A Harmony 900 in Safe Mode could not be reached** (issue #9). It reports itself
+
   differently there and runs no web server, so it was refused before anything was
+
   read. It is now recognised as the same remote in Safe Mode: it can be read, and a
+
   configuration - or a backup - written to it, which is how it is brought back. In Safe
+
   Mode it asks for its USB link only every few seconds, up to half a minute apart, so
+
   the first connection waits for it; later ones are immediate. This needs the
+
   libconcord that comes with this version.
+
 - **A Harmony 1100 sold as skin 64 was refused** with "skin is 64 (expected 63);
+
   board is 0.4.14 (expected 0.3.0)", and was called "Unknown" throughout. Its firmware
+
   is the 1100's with only the model number changed, and Logitech's own software wrote
+
   it configurations, so it is an 1100: skin 64 and board 0.4 are now recognised. A
+
   remote libconcord has no name for is named by the profile that recognises it.
+
 - **Two favourites with the same name did the same thing.** The remote finds a
+
   favourite by its number, and a favourite that sends a command or runs a macro used its
+
   name as that number - so the second of two alike ran the first's. Each now gets a
+
   number of its own.
+
 - **A Harmony 1100 activity's favourites were never shown** unless it was a PVR
+
   activity: the remote shows them only on the top-right screen, which other types gave
+
   to Discs or the game pad. An activity with favourites now shows them there, unless
+
   that corner was chosen otherwise, and the editor says when they will not show.
+
 - **Importing a configuration put every command on each device's page.** Logitech's
+
   configurations show a chosen few - an imported Harmony 900 or 1100 now keeps exactly
+
   the page it had: the same buttons, in the same places, under the same names, with the
+
   same icons. Projects imported before this have every command on the page; import the
+
   configuration again to get its own page back.
+
 - **Importing a Harmony 900 configuration lost the layout of its activities' screen
+
   buttons**: the buttons were read in file order and the empty places between them
+
   dropped. Every activity page now comes back as it was.
+
 - **A Harmony 1100 activity made in Afterglow had no screen.** The remote shows an
+
   activity's tabs only when the activity turns them on, and a new one turned none on.
+
   It now gets the tabs Logitech gives its type, and opens on Transport as Logitech's do -
+
   an older project too, the next time it is flashed. Imported activities keep their own.
+
 - **The Harmony One drew a command's name on its button** rather than the button's text,
+
   and put a device's buttons in alphabetical order. It now draws the page as arranged,
+
   gaps included, and keeps the order when a configuration is imported.
+
+
 
 ## [0.3.0-beta.3] - 2026-10-15
 
+
+
 ### Added
 
+
+
 - **The last project opens when Afterglow starts.** If it was moved, deleted or
+
   damaged, Afterglow starts with an empty project and says so in the status bar.
+
 - **Earlier versions of a project are kept.** Each save first keeps the version it
+
   replaces in `Documents/Afterglow/Backups`, the last twenty for each project.
+
   **File › Show Earlier Versions** opens one; save to put it back.
+
 - **Keyboard shortcuts** for the File menu: New (Ctrl+N), Open (Ctrl+O), Import
+
   .ezhex (Ctrl+I), Save (Ctrl+S), Save As (Ctrl+Shift+S), Export .ezhex (Ctrl+E),
+
   Export Shareable Project (Ctrl+Shift+E) and Exit (Ctrl+Q) - Cmd on a Mac.
+
 - **Downloads for older computers.** `afterglow-windows7-x86.exe` runs on Windows 7
+
   SP1 and 8, and on 32-bit Windows; `afterglow-macos-x86_64-legacy.dmg` runs on Intel
+
   Macs with macOS 10.13 High Sierra to 10.15 Catalina. Both use Qt 5.15, the last Qt
+
   for those systems; Afterglow now runs on PyQt5 as well as PyQt6. Direct access works
+
   on Windows 7 too: Windows 7 has no generic WinUSB entry to choose, so Afterglow brings
+
   a small unsigned driver file, and Windows asks once whether to install it.
+
 - **French, Norwegian, Polish and Portuguese** for the Harmony 900's and 1100's own
+
   screens. Both remotes' firmware has thirteen languages; Afterglow offered nine.
+
+
 
 ### Changed
 
+
+
 - **The macOS downloads really run on macOS 11.** They said 11 but carried libraries
+
   built for macOS 13, 14 and 15, so on anything older than 15 they could fail to
+
   start. Every library is now built for 11 and the build checks each file.
+
 - **The Linux download runs on Ubuntu 20.04 and newer.** It was built on Ubuntu 24.04
+
   and needed the libraries of a 2024 system, so Ubuntu 22.04, Debian 12 and Linux Mint
+
   21 could not start it. It is built on Ubuntu 20.04 now.
+
 - **Flash to Remote builds the project itself.** There is no Build Config step to
+
   remember: it builds the project as it is on screen, unsaved changes included, and
+
   writes it. To keep the built file without writing it, use **File › Export .ezhex**.
+
   The output file name on Remote Settings is optional now; left empty, the file is
+
   named after the remote.
+
 - **The Harmony 1100 and One are written like the 900.** Test write is gone: its
+
   typed phrases and read-back checks failed writes that had worked - a remote changes
+
   its own settings files after a write - and protected no one. **Flash to Remote** now
+
   says the remote's support is experimental, saves what is on the remote to the
+
   `Dumps` folder, and only then writes; if the backup cannot be saved, nothing is
+
   written. Put a backup back with **Settings › Flash a Configuration File**.
+
+
 
 ### Fixed
 
+
+
 - **Direct access said "Windows' own USB driver was not found on this PC"** on
+
   Windows 11 and on Windows in other languages. It looked for Windows' generic USB
+
   driver by its English name; it finds it by its hardware ID now, and if it still
+
   cannot, it lists what Windows offered.
+
 - **A configuration saved by Logitech's software (`.EZHex`) did not show** when
+
   importing or flashing a file on Linux and macOS, whose file dialogs match the
+
   extension's case. Every spelling shows now, and those dialogs always offer All files.
+
 - **Build config failed on Windows with "[Errno 9] Bad file descriptor"** once a build
+
   had printed enough progress: the Windows application has no console to print to. That
+
   output is now dropped, and a failed build writes its details to the log file.
+
 - **A Harmony 1100 froze when an activity started** if a device was set to dial numbers
+
   but had no number buttons, like a Roku. The configuration carried an empty number pad,
+
   which the remote's own scripts cannot read, so it never loaded; with only some digit
+
   buttons, dialling a channel needing a missing one failed. A device gets a number pad
+
   only when it has all ten digit buttons; this affected the Harmony 900 too.
+
 - **Adding some devices from the Logitech database crashed Add Device**, among them a
+
   Panasonic CT27SF22 TV: a device that steps through its inputs with a wait before the
+
   step. The step's command is shown and its wait kept.
+
 - **Devices from the Logitech database came in as the wrong kind.** Tape decks were
+
   added as amplifiers, cable boxes as game consoles, set-top boxes as PVRs and monitors
+
   as computers, and every amplifier, satellite receiver, projector and AV switch as a
+
   home appliance. They now take the type Logitech gave them; on a Harmony 900 or 1100
+
   that decides how the remote treats the device. Devices already in a project keep the
+
   type they have.
+
 - **Saving did nothing but say "File not found" when Windows Security blocked it.**
+
   Windows' ransomware protection (Controlled folder access) can stop programs it does
+
   not know from saving in Documents, where Afterglow keeps its files. Afterglow now
+
   checks when it starts, says so, and shows how to allow it, with a button that opens
+
   the Windows Security page.
+
 - **A finished build looked like it had stopped** at "Packing -> ...". The log now says
+
   when the configuration is built and ready to write.
+
+
 
 ## [0.3.0-beta.2.1] - 2026-10-14
 
+
+
 A fix for beta 2: Test write on the Harmony One stopped after its backup.
+
+
 
 ### Fixed
 
+
+
 - **Test write on the Harmony One stopped after its backup** with "backend 'harmony-one'
+
   cannot produce a change report", so Write was never offered. It now says which parts of
+
   the configuration the write changes, and goes on to Write and Verify.
+
+
 
 ## [0.3.0-beta.2] - 2026-10-14
 
+
+
 What beta 1's testers ran into, fixed, and the editors made simpler to follow. Adding a
+
 device or an activity is a couple of steps; editing one lists what people come to change
+
 first and says which values are best left as they are. The remote's own keys are shown
+
 on a picture of the remote, things are put in order by dragging them, and a log file is
+
 there to attach to a bug report. Beta 1's crash on editing an imported One device is
+
 fixed.
+
+
 
 ### Changed
 
+
+
 - **The device and activity editors are laid out the same way**: a list of sections on
+
   the left, each with its title and a line saying what it is for, which the old tabs
+
   dropped. Sections whose values come from the device database or an imported
+
   configuration - Timing, Change model, Physical buttons, Power - are listed under
+
   **Usually left as they are**.
+
 - **Adding a device is finding it and naming it.** Its commands, power, inputs and timing
+
   come with the model and can be changed under Edit. Adding an activity asks for its
+
   name, its devices and their inputs; buttons, favourites and what happens when it ends
+
   are for Edit. Both wizards list their steps on the left, the way the editors list
+
   their sections, so adding something and editing it look alike.
+
 - Plainer words: "You watch on", "Volume goes to", "Play, channels and menus go to";
+
   Timing fields say when to change them. Power is chosen with the inputs.
+
 - A key or screen button that sends one command shows that command ("TV · SmartHub")
+
   instead of "1 step". The command table's Label column is **On screen as**: a command
+
   left blank is not unnamed, it is kept off the screen. Its address and command columns
+
   are behind **Show codes**.
+
 - The startup step editor has one **Add step** menu instead of five buttons.
+
 - **The remote's keys as a picture of the remote.** A device's Commands and an
+
   activity's Physical buttons show the remote as its user guide draws it, each key lit
+
   in its own outline by what it does; hovering says what it sends, clicking changes it.
+
   Beside it: the commands on no key, or the keys the activity changes. Picture or List,
+
   remembered. Keys go by the names people use ("Volume +", "OK", "Page up"), and the
+
   keys the remote keeps for itself are dark. The Harmony One, 900 and 1100 are drawn: the
+
   900's colour keys in their colours, the 1100 with the printing its guide leaves off.
+
   The list's Key column picks a key on the same drawing, and a key another command was
+
   on moves to the one picked.
+
 - **Drag to put things in order.** Devices and activities - the order the remote lists
+
   them in - startup and shutdown steps, the devices an activity switches on, screen
+
   buttons and favourites are moved by the grip on their row. Devices, activities,
+
   screen buttons and favourites could not be reordered at all; the steps and the power
+
   order had Up and Down buttons, which are gone.
+
 - **Each remote is a folder** in `library/remotes/`: `profile.json`, and beside it what is
+
   that remote's alone - its drawing, `art.svg`, and `art.json` with where its keys sit
+
   and how the drawing is cut from its guide. Removing the folder removes the remote.
+
+
 
 ### Added
 
+
+
 - **Favourites' logos come in without their button.** Logitech draws the logo onto the
+
   button, and the import kept the button with it. The button is taken out - against the
+
   configuration's own, so a blue logo keeps its blue - and the logo's drop shadow
+
   becomes a real shadow. A logo on a button Afterglow does not know keeps it, and
+
   covers the button when built.
+
 - Importing a Harmony One says when the configuration wears a custom theme, which a
+
   build replaces with the default look unless a theme is chosen.
+
 - A log file, `Documents/Afterglow/afterglow.log`, with what every remote operation did
+
   and any unexpected error; **Help > Show log file** opens it.
+
 - Writing a remote, including Settings > Flash a Configuration File, shows how far along
+
   it is.
+
+
 
 ### Fixed
 
+
+
 - Importing a Harmony One takes under a second rather than two or three: its checksum
+
   was worked out a byte at a time, forty times over.
+
 - Editing a favourite or a screen button moved it to the end of the list.
+
 - **Moving a Harmony 900 project to the One could fail** with "'tuple' object does not
+
   support item assignment" once a device had been edited: the editor kept its commands
+
   in a form the move could not change when it took away a key the One lacks.
+
 - A remote profile with a character outside the platform's encoding - "Volume −" -
+
   would not load on Windows: profiles are read as UTF-8.
+
 - **Learn from remote** is no longer offered on the Harmony One, where Afterglow cannot
+
   learn yet and it answered with "unknown error".
+
 - A device card no longer starts with a lone dot when the device has no make or model,
+
   an activity card leaves out a role it does not fill instead of showing "?", and only
+
   a remote with RF blasters names each device's IR output.
+
 - **Editing a device imported from a Harmony One could crash** when one of its inputs
+
   has no command - as Logitech's configurations write an input nothing selects. Such an
+
   input shows as "(none)", and a new input starts as "(none)" rather than the device's
+
   first command.
+
 - A Harmony One device whose icon Afterglow does not know showed no icon in the device
+
   list. It is imported as a **Home appliance**, and Import Complete says so.
+
+
 
 ## [0.3.0-beta.1] - 2026-10-13
 
+
+
 The **Harmony One and One+**, as an experimental remote: Afterglow builds the
+
 configuration from your devices and activities - every screen, button, light and menu
+
 generated, nothing copied from a previous configuration - and imports the one already on
+
 it. Like the Harmony 1100, it is written only through **Test write**, which backs the
+
 remote up first. Testers' remotes run it with activities, favourites, Help and the Remote
+
 Assistant working, and it has been written from inside Afterglow; this beta is for
+
 everyone else's setups.
+
+
 
 ### Added
 
+
+
 - **Harmony One configurations, built from scratch.** The Activities menu, the device
+
   list and each device's command pages; activities that switch devices on and off, set
+
   inputs, route the keys and show their own buttons, with favourite channels and their
+
   logos, Help, and the Remote Assistant asking whether everything turned on; Off;
+
   Options with Date and Time, Screen Sensitivity, Screen Sounds, the Remote Assistant
+
   switch and a Tutorial; the keypad lights, sleep and waking when picked up, and the
+
   USB and charging screens. A step can hold a command for as long as a device needs, and
+
   an input can be chosen in several steps.
+
 - **Importing a Harmony One configuration** brings across its devices - with their
+
   commands' names, power, inputs and the keys they are on - and its activities, with
+
   their buttons, keys and favourites, the favourites' logos (into `Logos/Imported`),
+
   and the type of every device and activity. A One draws its text rather than storing
+
   it, so names are read from their letters' shapes, in any language. **Import Complete**
+
   says what could not be carried over.
+
 - **Themes for the Harmony One.** `Documents/Afterglow/Themes/harmony-one/Example` is
+
   the look Afterglow ships, to copy and change - pictures, fonts and colours, and a
+
   TrueType font of your own. **Remote Settings > Theme** lists your themes; a project
+
   remembers its theme by name.
+
 - **A folder for each kind of file** in `Documents/Afterglow`: `Projects`, `Dumps`
+
   (configurations read from a remote or imported), `Generated` (configurations built
+
   here) and `Themes`, beside `Library` and `Logos`. Each dialog opens in its own.
+
 - The Flash tab's log says what a build wrote, and where.
+
 - **Harmony One:** while it charges it shows the battery, then three photos in turn, as
+
   Logitech's configurations did, and goes back to what it was showing when it is lifted
+
   off; a charging problem shows its notice. A theme can replace the pictures.
+
 - **Smart TVs wait for their apps, and every device for its inputs** - on the Harmony
+
   One, 900 and 1100. A TV's online input (Netflix, nearly always) is sent only once its
+
   apps are up, Logitech's own delay after power-on, and only the first time after
+
   power-on - as Logitech's One configurations do; the 900 and 1100 now do it too, without
+
   Help asking anything more. A device switching inputs gets Logitech's time to settle
+
   before the next command. Both come with a device from the Logitech database and are on
+
   its **Timing** page.
+
+
 
 ### Changed
 
+
+
 - **The Logitech device database is read from Afterglow's own archive**,
+
   [harmony-ir-archive](https://github.com/harmonic-afterglow/harmony-ir-archive): the
+
   capture of Logitech's service as it answered, served a device at a time - looking a
+
   device up fetches a few hundred kilobytes, never the database. It carries what the
+
   earlier source left out, such as each device's input delay and which inputs are a TV's
+
   apps, and the commands learned in Logitech's software, which were missing before.
 
+
+
 - A device's **Timing** page, and the device and activity **Advanced** pages, show only
+
   what the remote's builder uses: the Harmony One has the power-on delay, the delay
+
   between a channel's digits, the input and apps delays and Always on.
+
 - The activity list shows a type's name ("Watch a DVD"), as the editor does.
+
 - Shareable projects unpack into `Projects`; an existing lowercase `projects` folder is
+
   renamed to it.
+
 - Importing no longer leaves a `<name>_extracted` folder beside the file: it is
+
   unpacked out of sight, and the pictures the project uses are kept in
+
   `Logos/Imported/<name>`. Folders left by earlier versions can be deleted once no
+
   project made before this one is built again.
+
 - **Harmony One:** a device's pages leave out what its keys already send - VolumeUp on
+
   VolumeUp, 1 on Number1 - as Logitech's do, and keep a command put on a key in another's
+
   place (Return on Exit). An imported configuration's press-only copies and nameless
+
   codes are on no page either. The living room's devices now show the buttons Logitech showed.
 
+
+
 - **Harmony One: Help, the Remote Assistant and the Tutorial are Logitech's.** Help re-sends
+
   what the activity set, asks whether that fixed it, then asks after each device and input
+
   in turn, re-sending whatever is not right. The Remote Assistant shows Logitech's notes
+
   after a start and after Off - a new remote opens on its welcome - until it is hidden;
+
   Options turns it back on. The Tutorial is Logitech's eleven pages with their pictures of
+
   the remote, keeping a small page counter.
+
+
 
 ### Fixed
 
+
+
 - Learning an imported configuration into the device library failed when a device had
+
   an input that no command selects.
+
 - A macro of one step was described as "1 steps".
+
 - The Harmony One's Remote Assistant asked whether a TV was "set to InputHdmi1"; it
+
   now says "HDMI 1".
+
 - Reading a Harmony One built here back in could misread a look-alike letter ("Xbox
+
   One" as "Xbox ane"), skipping that device's buttons.
+
 - **Test write** refused a Harmony One whose flash chip it reported in lower case
+
   (`0x1f:0xc8` against `0x1F:0xC8`): the same chip, now recognised however it is written.
+
 - Editing an activity imported from a Harmony One crashed when one of its steps held a
+
   command (the import says for how long); the hold is now shown and kept
+
   ([#7](https://github.com/harmonic-afterglow/afterglow/issues/7)).
+
 - An activity without a type opened in the editor as the first type in the list ("Listen
+
   to the CD Jukebox"), which saving it for any other reason then set. It opens as
+
   **Custom / Other**, and a Harmony One activity whose icon has no type - the One+'s
+
   Netflix and smart-TV icons - is imported as one.
 
 
+
+
+
 ### Known issues
 
+
+
 - **Harmony One:**
+
   - Its screens are in English only: an imported configuration in another language is
+
     rebuilt in English.
+
   - Logitech's Off turns off whatever is on; an imported configuration's Off turns off
+
     every device that has a power command, which comes to the same.
+
   - Commands a Logitech configuration never shows on any button or key have no name in
+
     it, and keep a numbered one ("Command 12"). A favourite that shows only a logo is
+
     named after its channel or the command it sends.
+
   - A letter none of the configurations Afterglow has learned from draws, in that size
+
     of font, cannot be read: it shows as � and Import Complete lists the names that
+
     have one.
+
   - A step Logitech holds for a while comes in with a hold close to, not exactly, its
+
     length.
+
   - The One+'s Netflix and smart-TV activity icons have no type on the One, so those
+
     activities come in as Custom / Other.
+
 - **Harmony 1100:** its Help and the wait for a smart TV's apps have not been tried on
+
   a remote yet.
+
+
 
 ## [0.2.0] - 2026-10-10
 
+
+
 The first stable release of 0.2.0. Since 0.1.1, across four betas: Harmony 900
+
 configurations no longer freeze the remote, every physical button can be mapped, a macOS
+
 app, direct USB access on Windows and Linux without Logitech's driver, Test write with
+
 automatic backup, shareable projects, and the Harmony 1100 as an experimental remote. The
+
 betas below list each change.
 
+
+
 The **Harmony 1100 stays experimental**: it is written only through Test write, which
+
 backs the remote up first. Its configurations have been checked against the 1100's own
+
 firmware (6.9 to 7.7), two real remotes' configurations rebuild exactly, and one tester
+
 has flashed a build - but few have tried it yet. Please report how it goes.
+
+
 
 ### Fixed
 
+
+
 - **Held buttons on an imported Harmony 1100 could send garbage.** Logitech stores the
+
   repeat signal some devices send while a button is held (NEC's) once per device, and
+
   points the other held commands at it; a rebuilt configuration pointed them at the
+
   wrong place. They now point where Logitech's did, byte for byte.
+
 - An imported Harmony 1100 on the newer board (0.5) was rebuilt naming board 0.3.
+
 - The Harmony 1100's favourite-channels page setting showed as unrecognised.
+
+
 
 ## [0.2.0-beta.4] - 2026-10-08
 
+
+
 Every Harmony 1100 is recognised now, whichever model number and board it has.
+
+
 
 ### Fixed
 
+
+
 - **Harmony 1100s with the newer board (0.5)** were "not supported" and could not be
+
   backed up: the profile knew only board 0.3. Both boards, and both model numbers
+
   (skins 62 and 63), are the same remote.
+
 - Test write's backup of a Harmony 1100 failed asking for `ActionLists.xml`, a Harmony
+
   900 file the 1100 never has.
+
 - "Configuration memory: … of 1 bytes used" on the 900, 1000 and 1100, whose total
+
   libconcord cannot know: only the size is shown.
+
+
 
 ## [0.2.0-beta.3] - 2026-10-08
 
+
+
 Afterglow talks to the remote over USB itself on Windows and Linux too, and backups
+
 can be put back from inside the app.
+
+
 
 ### Added
 
+
+
 - **Direct access on Windows.** The first time a Harmony 900, 1000 or 1100 is
+
   connected, Afterglow offers to put it on a USB driver that comes with Windows
+
   instead of Logitech's, which is no longer maintained and is refused by many current
+
   PCs. Windows asks for administrator permission once. **Settings > Remote
+
   connection** shows how the remote is connected and switches either way. A remote
+
   plugged into a different USB port is a new device to Windows, so Afterglow asks
+
   again there.
+
 - **Direct access on Linux**, offered on the first start alongside the network link: a
+
   udev rule that lets you open the remote, installed with one password prompt.
+
 - **Settings > Flash a Configuration File** writes any `.ezhex` onto the remote as it
+
   is - a backup, to put the remote back how it was - like `concordance -C`. A file
+
   made for a different remote is refused unless **Force** is ticked.
+
 - **A default remote.** The first start asks which Harmony you have, after the
+
   connection questions, and Afterglow then starts with a project for it instead of
+
   always the Harmony 900. Moving a project to another remote offers to make that one
+
   the default (with "Don't ask again"); **Settings > Default Remote** changes it.
+
+
 
 ### Changed
 
+
+
 - Reading from and writing to the remote say **Connecting to the remote** while it is
+
   being found, which can take up to 20 seconds.
+
 - Running from source, `AFTERGLOW_LIBCONCORD` names the libconcord to use, ahead of the
+
   one installed on the system.
+
+
 
 ### Known issues
 
+
+
 - With a large configuration, the Harmony 900's screen can stay white after a restart
+
   until the remote has gone to sleep once; it is normal from then on.
+
+
 
 ## [0.2.0-beta.2] - 2026-10-07
 
+
+
 The Harmony 1100 joins as an experimental remote, and Afterglow gets a macOS app.
+
+
 
 ### Added
 
+
+
 - **Harmony 1100** (experimental): its configurations are read and imported - every
+
   command, activities and their touchscreen pages - and built back. Writing goes
+
   through Test write, which backs the remote up first and checks the result.
+
 - **A macOS app** (`.dmg`) for Apple Silicon, and Intel where the build succeeds. It
+
   talks to the Harmony 900/1000/1100 over USB by itself: no driver to install.
+
   Logitech's own Mac driver does not work on current macOS.
+
 - The bundles carry Afterglow's own libconcord
+
   ([harmonic-afterglow/concordance](https://github.com/harmonic-afterglow/concordance),
+
   branch `usbnet-link`), which reaches the 900/1000/1100 over USB itself wherever it can
+
   claim the remote, and falls back to the network link (Logitech's driver on Windows)
+
   where it cannot.
+
+
 
 ### Fixed
 
+
+
 - **The macOS app crashing on Apple Silicon** when talking to a remote a second time,
+
   or on quitting after it had: every call into libconcord now runs on one thread.
+
 - **Searching the Logitech database failing on macOS** with a certificate error: the
+
   app now checks downloads against the system's own certificates.
+
 - **Skip and replay keys that did nothing**: a device's own command for them -
+
   ChapterNext, NextTrack, Replay and the like - now goes on the skip keys when nothing
+
   else is there, as in Logitech's configurations. Existing projects are filled once
+
   when opened; imported ones are left as they were.
+
 - A key Logitech bound to a held command sent it only once when held.
+
 - Reading a configuration from a remote shortly after a reset could crash: the
+
   remote's configuration had grown since it was measured. It is now measured again.
+
 - Under KDE's Breeze, form fields stayed at their smallest size, leaving the role
+
   pickers a few letters wide.
+
 - An activity could not be left without a Display, Control or Volume device.
+
+
 
 ### Changed
 
+
+
 - The tabs run straight on from the title bar, with no frame of their own; on macOS
+
   without a line between them. The current tab's name is no longer underlined under
+
   Breeze and Oxygen.
+
 - Device, activity and button pictures are taken from the Harmony 1100's PNGs, without
+
   the speckle the 900's left in every shadow.
+
 - Each remote's profile decides which tabs, editor pages, settings and languages are
+
   shown for it.
+
+
 
 ## [0.2.0-beta.1] - 2026-10-06
 
+
+
 A beta for testing on real remotes. Everything below passes the test suite and the
+
 Harmony 900's own boot logic, but has not yet been flashed onto many remotes - please
+
 report how it goes.
+
+
 
 ### Fixed
 
+
+
 - **Harmony 900 configurations that froze the remote**: a device that can only step
+
   through its inputs was written without its input names, which stopped the remote's
+
   behaviour layer from loading - Help froze, Remote info did nothing and Advanced RF
+
   settings opened blank. Input names are now kept, and a cycle without them is left out
+
   rather than written broken.
+
 - **Physical buttons that could not be mapped in an activity** (#5): every button on the
+
   Harmony 900 can now be assigned, under the names the remote answers to - Pg Up/Pg Dn,
+
   the transport skips, the colour buttons, Info, Guide, Exit and the two keys beside 0.
+
   Projects saved with the old names are renamed when opened.
+
 - **"Failed with error 14" when reading or writing on Windows**, for files in folders
+
   whose names are not plain ASCII.
+
 - **A remote refused as "not proven compatible"** because its board micro revision
+
   (0.1.15) differed from the 0.1.0 every configuration file records.
+
 - **Remote info showing the configuration as last updated in 2020**: each build now
+
   carries the time it was made.
+
 - Help text cut off under some desktop styles (KDE's Breeze).
+
 - Unpacking and repacking a configuration is byte-identical on systems using zlib-ng
+
   (Arch, Fedora).
+
+
 
 ### Added
 
+
+
 - **The remote a project is for**, shown in a new status bar along the bottom with the
+
   project's contents, file and saved state - each clickable. Clicking the remote moves
+
   the project to another remote, showing every change before anything is saved.
+
 - **Unsaved changes** are marked in the title and the status bar, edits in Remote
+
   Settings included, and New, Open and Import ask before replacing unsaved work.
+
 - **Shareable projects** (`.afterglow`): one file holding a project and every protocol
+
   and picture it needs, so it builds on any computer. File > Export Shareable Project;
+
   File > Open reads them.
+
 - **An activity's power plan**: which devices turn on, in what order, and which turn off.
+
 - **How a device switches inputs**: directly, by stepping with one command, or not at
+
   all, and how it takes channel numbers.
+
 - **Help > Connecting a Remote**, walking through the driver and the first connection.
+
 - **Test write** for remotes still in testing: the remote is backed up first, the
+
   result is read back and checked, and the backup can be restored.
+
 - Learn from remote explains what is missing instead of being greyed out without
+
   libconcord.
+
+
 
 ### Changed
 
+
+
 - Your device library and prepared logos now live in `Documents/Afterglow` (`Library`
+
   and `Logos`) beside your projects, instead of hidden application data. An existing
+
   library is copied there on first start and the old folder renamed, never deleted.
+
 - Remotes are described by profiles, and the interface follows the project's remote:
+
   only what that remote can do is offered.
+
+
 
 ## [0.1.1] - 2026-09-07
 
+
+
 ### Fixed
 
+
+
 - Convert and embed protocol definitions from the Logitech Harmony archive when no
+
   external protocol database is installed, instead of aborting device creation with a
+
   `LookupError`.
+
 - Preserve the Pronto waveform fallback when neither a reviewed nor mechanically
+
   converted protocol definition is available.
+
+
 
 ### Removed
 
+
+
 - Remove the redundant online-database source text box and the inaccessible legacy local
+
   Logitech archive folder mode from the Device Wizard.
+
+
 
 ## [0.1.0] - 2026-09-04
 
+
+
 ### Added
 
+
+
 - **Initial release of Afterglow** — standalone local configuration author, builder, and flasher for Logitech Harmony remotes following the official service shutdown.
+
 - **Logitech Harmony 900 Support (`harmony_pk`)**:
+
   - Full reverse-engineered support for `.ezhex` container packaging, XML configuration structure, checksum verification, and install scripts.
+
   - Native emission for `IrProto.bin` IR bytecode blocks and `SsIr.bin` captured raw waveforms.
+
   - Support for devices, discrete/toggle power, multi-step inputs, macro activities, routed states, channel prefixes, and key mappings.
+
   - Full control over remote hardware settings (backlight level, font size, tilt sensor, child lock, key beep, clock).
+
 - **Multi-Source Device Catalogue**:
+
   - Built-in local device template library.
+
   - Online database search for the Logitech Harmony IR Archive (276,236 devices), Flipper-IRDB, and IRDB public catalogues.
+
   - Unified "All sources" search with source precedence ordering (Local > External Repos > Online Databases) and duplicate entry suppression.
+
   - Interactive source chip buttons for quick single-source filtering.
+
 - **IR Protocol Engine**:
+
   - Generic IR compiler achieving 99.98% command reproduction across 2,067,455 unique commands in the Logitech archive.
+
   - Portable IR protocol grammar enabling full round-trip conversion and hardware-independent signal definitions.
+
   - Raw IR capture and remote learning engine for uncatalogued handsets.
+
 - **Desktop Application & Utilities**:
+
   - PyQt6 multi-tab interface (Find/Edit Devices, Activity Builder, Button Mapping, Remote Settings, Flash Operations).
+
   - Standalone executable packaging for Linux and Windows.
+
   - Automatic Linux USB network link helper setup (`harmony_net.sh` / udev rule integration).
+
   - Direct USB operations: backup reading, configuration flashing, and RF blaster pairing.

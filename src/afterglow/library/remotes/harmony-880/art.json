@@ -1,0 +1,234 @@
+{
+  "_comment": "Harmony 880. Line art embedded. Key boxes adjusted to match visual positions. Keys are [x, y, width, height].",
+  "svg": "art.svg",
+  "view": [
+    10,
+    160,
+    160,
+    400
+  ],
+  "keys": {
+    "VolumeMute": [
+      20,
+      195,
+      14,
+      32
+    ],
+    "PrevChannel": [
+      146,
+      195,
+      14,
+      32
+    ],
+    "VolumeUp": [
+      16,
+      248,
+      10,
+      16
+    ],
+    "VolumeDown": [
+      16,
+      268,
+      10,
+      16
+    ],
+    "ChannelUp": [
+      154,
+      248,
+      10,
+      16
+    ],
+    "ChannelDown": [
+      154,
+      268,
+      10,
+      16
+    ],
+    "DirectionUp": [
+      84,
+      242,
+      12,
+      10
+    ],
+    "DirectionLeft": [
+      66,
+      258,
+      10,
+      14
+    ],
+    "Select": [
+      82,
+      256,
+      16,
+      16
+    ],
+    "DirectionRight": [
+      104,
+      258,
+      10,
+      14
+    ],
+    "DirectionDown": [
+      84,
+      278,
+      12,
+      10
+    ],
+    "Menu": [
+      30,
+      395,
+      28,
+      16
+    ],
+    "Exit": [
+      62,
+      395,
+      28,
+      16
+    ],
+    "Guide": [
+      94,
+      395,
+      28,
+      16
+    ],
+    "Info": [
+      126,
+      395,
+      28,
+      16
+    ],
+    "Stop": [
+      30,
+      418,
+      28,
+      16
+    ],
+    "Replay": [
+      62,
+      418,
+      28,
+      16
+    ],
+    "SkipForward": [
+      94,
+      418,
+      28,
+      16
+    ],
+    "Prev": [
+      126,
+      418,
+      28,
+      16
+    ],
+    "Record": [
+      30,
+      440,
+      28,
+      16
+    ],
+    "Rewind": [
+      62,
+      440,
+      28,
+      16
+    ],
+    "FastForward": [
+      94,
+      440,
+      28,
+      16
+    ],
+    "Pause": [
+      126,
+      440,
+      28,
+      16
+    ],
+    "Number1": [
+      38,
+      465,
+      30,
+      24
+    ],
+    "Number2": [
+      74,
+      465,
+      30,
+      24
+    ],
+    "Number3": [
+      110,
+      465,
+      30,
+      24
+    ],
+    "Number4": [
+      38,
+      480,
+      30,
+      24
+    ],
+    "Number5": [
+      74,
+      480,
+      30,
+      24
+    ],
+    "Number6": [
+      110,
+      480,
+      30,
+      24
+    ],
+    "Number7": [
+      38,
+      510,
+      30,
+      24
+    ],
+    "Number8": [
+      74,
+      510,
+      30,
+      24
+    ],
+    "Number9": [
+      110,
+      510,
+      30,
+      24
+    ],
+    "NumberClear": [
+      38,
+      520,
+      30,
+      24
+    ],
+    "Number0": [
+      74,
+      520,
+      30,
+      24
+    ],
+    "NumberEnter": [
+      110,
+      520,
+      30,
+      24
+    ]
+  },
+  "unassignable": {},
+  "source": {
+    "guide": "harmony880-user-guide.pdf",
+    "page": 4,
+    "region": [
+      10,
+      140,
+      160,
+      400
+    ],
+    "notes": "Coordinates adjusted based on UI feedback"
+  }
+}
